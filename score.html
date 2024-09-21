@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可編輯計分板（帶音效）</title>
+    <style>
+        /* 保留之前的 CSS 樣式 */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .scoreboard {
+            width: 90%;
+            height: 95%;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        h1 {
+            margin-top: 0;
+            text-align: center;
+            font-size: 4vw;
+            color: #333;
+        }
+        .scores {
+            display: flex;
+            justify-content: space-around;
+            flex-grow: 1;
+        }
+        .team {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+        .home-team {
+            background-color: #3498db;
+            color: white;
+        }
+        .away-team {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .team-name {
+            font-size: 3vw;
+            border: 1px dashed rgba(255, 255, 255, 0.5);
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        .team-name:focus {
+            outline: none;
+            border-color: white;
+        }
+        .score {
+            font-size: 10vw;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        button {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 15px 25px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 2.5vw;
+            margin: 10px 5px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        .reset {
+            background-color: #2c3e50;
+            font-size: 2vw;
+            padding: 10px 20px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 200px;
+        }
+        .reset:hover {
+            background-color: #34495e;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 6vw; }
+            .team-name { font-size: 4vw; }
+            .score { font-size: 15vw; }
+            button { font-size: 4vw; }
+            .reset { font-size: 3.5vw; }
+        }
+        @media (min-width: 769px) and (max-width: 1024px) {
+            h1 { font-size: 5vw; }
+            .team-name { font-size: 3.5vw; }
+            .score { font-size: 12vw; }
+            button { font-size: 3vw; }
+            .reset { font-size: 2.5vw; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scoreboard">
+        <h1 contenteditable="true">計分板</h1>
+        <div class="scores">
+            <div class="team home-team">
+                <div class="team-name" contenteditable="true">主隊</div>
+                <div class="score" id="home-score">0</div>
+                <div class="buttons">
+                    <button onclick="updateScore('home', 1)">+1</button>
+                    <button onclick="updateScore('home', -1)">-1</button>
+                </div>
+            </div>
+            <div class="team away-team">
+                <div class="team-name" contenteditable="true">客隊</div>
+                <div class="score" id="away-score">0</div>
+                <div class="buttons">
+                    <button onclick="updateScore('away', 1)">+1</button>
+                    <button onclick="updateScore('away', -1)">-1</button>
+                </div>
+            </div>
+        </div>
+        <div class="buttons" style="justify-content: center;">
+            <button class="reset" onclick="resetScores()">重置比分</button>
+        </div>
+    </div>
+
+    <!-- 音效文件 -->
+    <audio id="scoreUpSound" src="https://taira-komori.jpn.org/sound_os2/game01/select01.mp3"></audio>
+    <audio id="scoreDownSound" src="https://taira-komori.jpn.org/sound_os2/game01/blip01.mp3"></audio>
+    <audio id="resetSound" src="https://taira-komori.jpn.org/sound_os2/game01/jump01.mp3"></audio>
+
+    <script>
+        const scoreUpSound = document.getElementById('scoreUpSound');
+        const scoreDownSound = document.getElementById('scoreDownSound');
+        const resetSound = document.getElementById('resetSound');
+
+        function playSound(sound) {
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log("音效播放失敗:", e));
+        }
+
+        function updateScore(team, amount) {
+            const scoreElement = document.getElementById(team + '-score');
+            let score = parseInt(scoreElement.textContent);
+            score = Math.max(0, score + amount);
+            scoreElement.textContent = score;
+            
+            if (amount > 0) {
+                playSound(scoreUpSound);
+            } else if (amount < 0 && score > 0) {
+                playSound(scoreDownSound);
+            }
+        }
+
+        function resetScores() {
+            document.getElementById('home-score').textContent = '0';
+            document.getElementById('away-score').textContent = '0';
+            playSound(resetSound);
+        }
+
+        // 為可編輯元素添加失去焦點時保存的功能
+        document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.addEventListener('blur', function() {
+                if (this.textContent.trim() === '') {
+                    this.textContent = this.getAttribute('data-default') || '隊伍名稱';
+                }
+            });
+            el.setAttribute('data-default', el.textContent);
+        });
+    </script>
+</body>
+</html>

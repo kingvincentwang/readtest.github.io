@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成語解釋配對遊戲</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .explanation {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9e9e9;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, minmax(20px, 30px));
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+        .cell {
+            aspect-ratio: 1;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .cell:hover {
+            background-color: #f0f0f0;
+        }
+        .cell.selected {
+            background-color: #ffff99;
+        }
+        .cell.found {
+            background-color: #ff6b6b;
+            color: #ffffff;
+        }
+        .status, .found-list {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        #completionMessage {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #4caf50;
+        }
+        #replayButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #replayButton:hover {
+            background-color: #45a049;
+        }
+        @media (max-width: 480px) {
+            .grid {
+                grid-template-columns: repeat(10, minmax(15px, 1fr));
+            }
+            .cell {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>成語解釋配對遊戲</h1>
+        <div class="explanation" id="currentExplanation"></div>
+        <div class="grid" id="grid"></div>
+        <div class="status">已找到：<span id="foundCount">0</span> / 5</div>
+        <div class="found-list" id="foundIdioms"></div>
+        <div id="completionMessage"></div>
+        <button id="replayButton" style="display: none;">再玩一次</button>
+    </div>
+
+    <script>
+        const allIdioms = [
+            { idiom: '一石二鳥', explanation: '比喻一個行動同時達到兩個目的。' },
+            { idiom: '畫蛇添足', explanation: '比喻做了多餘的事情，反而壞了原來的好處。' },
+            { idiom: '守株待兔', explanation: '比喻希望不勞而獲，比喻死守狹隘經驗，不知變通。' },
+            { idiom: '對牛彈琴', explanation: '比喻對不懂道理的人講道理，白費力氣。' },
+            { idiom: '掩耳盜鈴', explanation: '比喻自己欺騙自己。' },
+            { idiom: '拋磚引玉', explanation: '比喻用自己不成熟的意見或作品引出別人更好的意見或作品。' },
+            { idiom: '井底之蛙', explanation: '比喻見識短淺的人。' },
+            { idiom: '滄海一粟', explanation: '比喻非常渺小，微不足道。' },
+            { idiom: '杯弓蛇影', explanation: '比喻疑神疑鬼，自相驚擾。' },
+            { idiom: '揠苗助長', explanation: '比喻為急於求成而採取不正當的方法，結果反而壞事。' },
+            { idiom: '乘風破浪', explanation: '比喻奮勇前進，勇往直前。' },
+            { idiom: '望梅止渴', explanation: '比喻願望無法實現，用空想安慰自己。' },
+            { idiom: '四面楚歌', explanation: '比喻四面受敵，處境困難。' },
+            { idiom: '驚弓之鳥', explanation: '比喻經過驚嚇而變得非常警惕。' },
+            { idiom: '蜻蜓點水', explanation: '比喻做事膚淺，不深入。' },
+            { idiom: '一觸即發', explanation: '形容情勢緊張，一觸即會爆發。' },
+            { idiom: '眾志成城', explanation: '比喻大家團結一致，就能發揮巨大的力量。' },
+            { idiom: '大器晚成', explanation: '比喻人的才能要經過長期的磨練才能成熟。' },
+            { idiom: '明日黃花', explanation: '比喻過時的事物。' },
+            { idiom: '孤注一擲', explanation: '比喻賭上全部希望，做最後的努力。' },
+            { idiom: '樂不思蜀', explanation: '比喻在新環境中得到快樂，不想回到原來的地方。' },
+            { idiom: '望洋興嘆', explanation: '比喻做事力不從心，感到無可奈何。' },
+            { idiom: '讀書破萬卷', explanation: '形容讀書很多，學識淵博。' },
+            { idiom: '緣木求魚', explanation: '比喻方法不對，徒勞無功。' },
+            { idiom: '鷸蚌相爭', explanation: '比喻雙方相持不下，兩敗俱傷。' },
+            { idiom: '一葉知秋', explanation: '比喻從小事可以推知大事。' },
+            { idiom: '胸有成竹', explanation: '比喻在做事之前已經有了完全的把握。' },
+            { idiom: '金戈鐵馬', explanation: '形容戰爭的場面或軍隊的威武。' },
+            { idiom: '夜郎自大', explanation: '比喻人無知而自以為了不起。' },
+            { idiom: '風捲殘雲', explanation: '比喻來勢凶猛，掃除一切阻礙。' }
+        ];
+        const gridSize = 10;
+        const totalCells = gridSize * gridSize;
+        let currentIdioms = [];
+        let foundIdioms = [];
+        let currentExplanationIndex = 0;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function selectRandomIdioms() {
+            shuffleArray(allIdioms);
+            return allIdioms.slice(0, 5);
+        }
+
+        function generateGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            const cells = new Array(totalCells).fill(null);
+            const fillerChars = '的一是不了人我在有他這為之大來以個中上們';
+            
+            currentIdioms = selectRandomIdioms();
+            
+            for (const idiomObj of currentIdioms) {
+                let placed = false;
+                while (!placed) {
+                    const startIndex = Math.floor(Math.random() * totalCells);
+                    const direction = Math.random() < 0.5 ? 1 : 10;
+                    
+                    if (canPlaceIdiom(cells, idiomObj.idiom, startIndex, direction)) {
+                        placeIdiom(cells, idiomObj.idiom, startIndex, direction);
+                        placed = true;
+                    }
+                }
+            }
+            
+            for (let i = 0; i < totalCells; i++) {
+                if (cells[i] === null) {
+                    cells[i] = fillerChars[Math.floor(Math.random() * fillerChars.length)];
+                }
+            }
+            
+            cells.forEach((char, index) => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = char;
+                cell.addEventListener('click', () => toggleCell(cell));
+                grid.appendChild(cell);
+            });
+        }
+
+        function canPlaceIdiom(cells, idiom, startIndex, direction) {
+            if (startIndex + (idiom.length - 1) * direction >= totalCells) return false;
+            if (direction === 1 && Math.floor(startIndex / 10) !== Math.floor((startIndex + idiom.length - 1) / 10)) return false;
+            
+            for (let i = 0; i < idiom.length; i++) {
+                if (cells[startIndex + i * direction] !== null) return false;
+            }
+            return true;
+        }
+
+        function placeIdiom(cells, idiom, startIndex, direction) {
+            for (let i = 0; i < idiom.length; i++) {
+                cells[startIndex + i * direction] = idiom[i];
+            }
+        }
+
+        function toggleCell(cell) {
+            if (!cell.classList.contains('found')) {
+                cell.classList.toggle('selected');
+                checkSelection();
+            }
+        }
+
+        function checkSelection() {
+            const selectedCells = Array.from(document.querySelectorAll('.cell.selected'));
+            
+            if (selectedCells.length < 4) return;
+
+            const selectedText = selectedCells.map(cell => cell.textContent).join('');
+            
+            const isConsecutive = selectedCells.every((cell, index, array) => {
+                if (index === 0) return true;
+                const prevCell = array[index - 1];
+                const prevIndex = Array.from(cell.parentNode.children).indexOf(prevCell);
+                const currentIndex = Array.from(cell.parentNode.children).indexOf(cell);
+                return currentIndex - prevIndex === 1 || currentIndex - prevIndex === 10;
+            });
+
+            if (!isConsecutive) {
+                return;
+            }
+
+            if (selectedText === currentIdioms[currentExplanationIndex].idiom) {
+                foundIdioms.push(currentIdioms[currentExplanationIndex]);
+                markFoundIdiom(selectedCells);
+                updateFoundIdioms();
+                currentExplanationIndex++;
+                showNextExplanation();
+            }
+            
+            document.querySelectorAll('.cell.selected').forEach(cell => cell.classList.remove('selected'));
+        }
+
+        function markFoundIdiom(cells) {
+            cells.forEach(cell => cell.classList.add('found'));
+        }
+
+        function updateFoundIdioms() {
+            const foundIdiomsElement = document.getElementById('foundIdioms');
+            foundIdiomsElement.textContent = foundIdioms.map(idiom => idiom.idiom).join('、');
+            document.getElementById('foundCount').textContent = foundIdioms.length;
+
+            if (foundIdioms.length === currentIdioms.length) {
+                showCompletionMessage();
+            }
+        }
+
+        function showNextExplanation() {
+            const explanationElement = document.getElementById('currentExplanation');
+            if (currentExplanationIndex < currentIdioms.length) {
+                explanationElement.textContent = currentIdioms[currentExplanationIndex].explanation;
+            } else {
+                explanationElement.textContent = '恭喜你完成了所有題目！';
+            }
+        }
+
+        function showCompletionMessage() {
+            const messageElement = document.getElementById('completionMessage');
+            messageElement.textContent = '恭喜你找到了所有成語！你的中文詞彙知識真是令人佩服！';
+            document.getElementById('replayButton').style.display = 'block';
+        }
+
+        function initGame() {
+            foundIdioms = [];
+            currentExplanationIndex = 0;
+            document.getElementById('foundCount').textContent = '0';
+            document.getElementById('foundIdioms').textContent = '';
+            document.getElementById('completionMessage').textContent = '';
+            document.getElementById('replayButton').style.display = 'none';
+            generateGrid();
+            showNextExplanation();
+        }
+
+        document.getElementById('replayButton').addEventListener('click', initGame);
+
+        initGame(); // Initial game setup
+    </script>
+</body>
+</html>

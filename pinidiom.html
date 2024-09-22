@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>見縫插針成語版</title>
+    <style>
+        /* 保留原有的 CSS 樣式 */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+        .game-container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        .wheel-container {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            margin: 20px auto;
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .slot {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        .slot:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); }
+        .slot:nth-child(2) { top: 50%; right: 0; transform: translateY(-50%); }
+        .slot:nth-child(3) { bottom: 0; left: 50%; transform: translateX(-50%); }
+        .slot:nth-child(4) { top: 50%; left: 0; transform: translateY(-50%); }
+        .slot-number {
+            position: absolute;
+            font-size: 14px;
+            font-weight: bold;
+            color: yellow;
+            text-shadow: 1px 1px 1px black;
+            pointer-events: none;
+        }
+        .characters {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .character {
+            font-size: 24px;
+            margin: 0 10px;
+            padding: 10px 15px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .character:hover {
+            background-color: #d0d0d0;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+            min-height: 3em;
+        }
+        #explanation {
+            margin-top: 20px;
+            font-size: 24px;
+            color: red;
+            font-weight: bold;
+            display: none;
+        }
+        .firework {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            animation: explode 1s ease-out forwards;
+        }
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(30);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>見縫插針成語CSV版</h1>
+		<div>CSV檔請放在一起且要放在web上</div>
+        <div class="wheel-container">
+            <div class="wheel" id="wheel"></div>
+        </div>
+        <div id="characters" class="characters"></div>
+        <div id="message"></div>
+        <div id="explanation"></div>
+    </div>
+
+    <script>
+        let idioms = [];
+        let currentIdiom;
+        let currentIndex = 0;
+        let filledSlots = 0;
+        let rotationSpeed = 10; // 初始旋轉速度，單位為秒
+
+        // 從CSV文件加載成語數據
+        async function loadIdiomsFromCSV() {
+            try {
+                const response = await fetch('idioms.csv'); // 假設CSV文件名為idioms.csv
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const csvText = await response.text();
+                idioms = parseCSV(csvText);
+                startNewRound(); // 數據加載完成後開始遊戲
+            } catch (error) {
+                console.error('無法加載成語數據:', error);
+                document.getElementById('message').textContent = '無法加載成語數據，請刷新頁面重試。';
+            }
+        }
+
+        function parseCSV(csv) {
+            const lines = csv.split('\n');
+            // 跳過標題行
+            return lines.slice(1).map(line => {
+                const [phrase, explanation] = line.split(',');
+                return { 
+                    phrase: phrase.trim(), 
+                    explanation: explanation.trim().replace(/^"|"$/g, '') // 移除可能的引號
+                };
+            }).filter(idiom => idiom.phrase && idiom.explanation); // 過濾掉不完整的行
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function createWheel() {
+            const wheel = document.getElementById('wheel');
+            wheel.innerHTML = '';
+            for (let i = 1; i <= 4; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                slot.addEventListener('click', () => handleSlotClick(slot));
+                const number = document.createElement('div');
+                number.className = 'slot-number';
+                number.textContent = i;
+                slot.appendChild(number);
+                wheel.appendChild(slot);
+            }
+            updateWheelSpeed();
+        }
+
+        function updateWheelSpeed() {
+            const wheel = document.getElementById('wheel');
+            wheel.style.animation = `rotate ${rotationSpeed}s linear infinite`;
+        }
+
+        function displayCharacters() {
+            const charactersContainer = document.getElementById('characters');
+            charactersContainer.innerHTML = '';
+            const shuffledChars = shuffleArray(currentIdiom.phrase.split(''));
+            shuffledChars.forEach((char, index) => {
+                const button = document.createElement('button');
+                button.textContent = char;
+                button.className = 'character';
+                button.addEventListener('click', () => handleCharacterClick(char, button));
+                charactersContainer.appendChild(button);
+            });
+        }
+
+        function handleCharacterClick(char, button) {
+            const bottomSlot = getBottomSlot();
+            if (bottomSlot && (bottomSlot.textContent === '' || bottomSlot.querySelector('.slot-number'))) {
+                fillSlot(bottomSlot, char);
+                button.style.visibility = 'hidden';
+                filledSlots++;
+                checkCompletion();
+            } else {
+                document.getElementById('message').textContent = '底部圓圈已被填入，請點擊圓圈進行交換';
+            }
+        }
+
+        function handleSlotClick(slot) {
+            const bottomSlot = getBottomSlot();
+            if (slot === bottomSlot && (slot.textContent === '' || slot.querySelector('.slot-number'))) {
+                document.getElementById('message').textContent = '請點擊字符填入此圓圈';
+            } else if (slot.textContent !== '' && !slot.querySelector('.slot-number') && 
+                       bottomSlot && bottomSlot.textContent !== '' && !bottomSlot.querySelector('.slot-number')) {
+                // Swap characters
+                const temp = slot.textContent;
+                slot.textContent = bottomSlot.textContent;
+                bottomSlot.textContent = temp;
+                checkCompletion();
+            }
+        }
+
+        function fillSlot(slot, char) {
+            slot.textContent = char;
+            const number = slot.querySelector('.slot-number');
+            if (number) {
+                slot.removeChild(number);
+            }
+        }
+
+        function getBottomSlot() {
+            const slots = document.querySelectorAll('.slot');
+            let bottomSlot = null;
+            let maxY = -Infinity;
+
+            slots.forEach(slot => {
+                const rect = slot.getBoundingClientRect();
+                if (rect.y > maxY) {
+                    maxY = rect.y;
+                    bottomSlot = slot;
+                }
+            });
+
+            return bottomSlot;
+        }
+
+        function checkCompletion() {
+            if (filledSlots === 4) {
+                const slots = document.querySelectorAll('.slot');
+                const answer = Array.from(slots).map(slot => slot.textContent).join('');
+                if (answer === currentIdiom.phrase) {
+                    document.getElementById('message').textContent = '正確！';
+                    showExplanation();
+                } else {
+                    document.getElementById('message').textContent = '順序錯誤，請重新開始。';
+                    setTimeout(() => {
+                        resetRound();
+                        document.getElementById('message').textContent = '重新開始當前成語。';
+                    }, 1500);
+                }
+            }
+        }
+
+        function showExplanation() {
+            const explanationElement = document.getElementById('explanation');
+            explanationElement.textContent = currentIdiom.explanation;
+            explanationElement.style.display = 'block';
+            
+            setTimeout(() => {
+                explanationElement.style.display = 'none';
+                currentIndex++;
+                if (currentIndex < idioms.length) {
+                    rotationSpeed = Math.max(5, rotationSpeed - 1); // 加快速度，但不低於5秒
+                    startNewRound();
+                } else {
+                    document.getElementById('message').textContent = '恭喜！你已完成所有成語。';
+                    document.getElementById('wheel').style.animationPlayState = 'paused';
+                    celebrateCompletion();
+                }
+            }, 3000);
+        }
+
+        function resetRound() {
+            const slots = document.querySelectorAll('.slot');
+            slots.forEach((slot, index) => {
+                slot.textContent = '';
+                const number = document.createElement('div');
+                number.className = 'slot-number';
+                number.textContent = index + 1;
+                slot.appendChild(number);
+            });
+            filledSlots = 0;
+            displayCharacters();
+        }
+
+        function startNewRound() {
+            if (idioms.length === 0) {
+                document.getElementById('message').textContent = '沒有可用的成語數據。';
+                return;
+            }
+            currentIdiom = idioms[currentIndex];
+            createWheel();
+            displayCharacters();
+            filledSlots = 0;
+            document.getElementById('message').textContent = '點擊字符填入底部圓圈，或點擊已填圓圈與底部交換';
+        }
+
+        function celebrateCompletion() {
+            // 播放煙火音效
+            const audio = new Audio('https://www.soundjay.com/misc/sounds/fireworks-01.mp3');
+            audio.play();
+
+            // 創建煙火效果
+            for (let i = 0; i < 20; i++) {
+                createFirework();
+            }
+        }
+
+        function createFirework() {
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+            firework.style.left = Math.random() * window.innerWidth + 'px';
+            firework.style.top = Math.random() * window.innerHeight + 'px';
+            firework.style.backgroundColor = getRandomColor();
+            document.body.appendChild(firework);
+
+            setTimeout(() => {
+                document.body.removeChild(firework);
+            }, 1000);
+        }
+
+        function getRandomColor() {
+            const r = Math.floor(Math.random() * 256);
+            const g = Math.floor(Math.random() * 256);
+            const b = Math.floor(Math.random() * 256);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // 初始化遊戲
+        loadIdiomsFromCSV();
+    </script>
+</body>
+</html>

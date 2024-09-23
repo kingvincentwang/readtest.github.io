@@ -160,7 +160,7 @@
         // 從CSV文件加載成語數據
         async function loadIdiomsFromCSV() {
             try {
-                const response = await fetch('./idioms.csv'); // 假設CSV文件名為idioms.csv
+                const response = await fetch('idioms.csv'); // 假設CSV文件名為idioms.csv
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }

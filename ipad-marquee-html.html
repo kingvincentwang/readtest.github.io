@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>帶更明顯全螢幕按鈕的彩虹LED風格iPad專用跑馬燈</title>
+    <style>
+        @font-face {
+            font-family: 'DFKai-SB';
+            src: local('DFKai-SB'), local('標楷體');
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'DFKai-SB', '標楷體', 'KaiTi', '楷体', 'SimKai', '华文楷体', serif;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .led-display {
+            width: 95%;
+            max-width: 1024px;
+            background-color: #111;
+            border: 2px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        .date-time {
+            text-align: center;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            font-size: 24px;
+        }
+        .marquee-container {
+            width: 100%;
+            overflow: hidden;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+        .marquee-content {
+            display: inline-block;
+            white-space: nowrap;
+            padding: 10px;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .rainbow-text {
+            background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 200% auto;
+            animation: rainbow 5s linear infinite;
+            text-shadow: 
+                0 0 5px rgba(255, 0, 0, 0.5),
+                0 0 10px rgba(255, 127, 0, 0.5),
+                0 0 15px rgba(255, 255, 0, 0.5),
+                0 0 20px rgba(0, 255, 0, 0.5),
+                0 0 25px rgba(0, 0, 255, 0.5),
+                0 0 30px rgba(139, 0, 255, 0.5);
+        }
+        .controls {
+            width: 95%;
+            max-width: 1024px;
+            margin-top: 20px;
+            background-color: #111;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        input, button {
+            font-family: inherit;
+            font-size: 16px;
+            padding: 5px 10px;
+            margin: 5px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #fff;
+            border-radius: 5px;
+        }
+        button {
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        #fullscreenToggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            border: none;
+            color: #fff;
+            font-size: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        #fullscreenToggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.9);
+        }
+        #fullscreenToggle:active {
+            transform: scale(0.95);
+        }
+        .fullscreen .controls {
+            display: none;
+        }
+        .fullscreen .led-display {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            border-radius: 0;
+            border: none;
+        }
+        .fullscreen .date-time {
+            font-size: 36px;
+            padding: 20px;
+        }
+        .fullscreen .marquee-container {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContainer">
+        <div class="led-display">
+            <div class="date-time" id="dateTime">
+                <span class="rainbow-text"></span>
+            </div>
+            <div class="marquee-container" id="marqueeContainer">
+                <div class="marquee-content" id="marqueeText">
+                    <span class="rainbow-text">歡迎使用LED風格的iPad專用跑馬燈！這是一個示例文字。 </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls" id="controls">
+            <label for="heightInput">跑馬燈高度 (px):</label>
+            <input type="number" id="heightInput" value="64" min="20" max="500">
+            <button onclick="updateHeight()">更新高度</button>
+            <br>
+            <label for="fontSizeInput">文字大小 (px):</label>
+            <input type="number" id="fontSizeInput" value="24" min="12" max="100">
+            <button onclick="updateFontSize()">更新文字大小</button>
+            <br>
+            <label for="speedInput">動畫速度 (秒):</label>
+            <input type="number" id="speedInput" value="20" min="5" max="60" step="1">
+            <button onclick="updateSpeed()">更新速度</button>
+            <br>
+            <label for="textInput">更新文字:</label>
+            <input type="text" id="textInput" value="歡迎使用LED風格的iPad專用跑馬燈！這是一個示例文字。">
+            <button onclick="updateText()">更新文字</button>
+        </div>
+    </div>
+
+    <button id="fullscreenToggle" onclick="toggleFullscreen()">⤢</button>
+
+    <script>
+        // JavaScript 代碼保持不變
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit', 
+                hour12: false 
+            };
+            const dateTimeString = now.toLocaleString('zh-TW', options).replace(/\//g, '-');
+            document.querySelector('#dateTime .rainbow-text').textContent = dateTimeString;
+        }
+
+        function updateMarqueeContent(text) {
+            const repeatedText = (text + ' ').repeat(2);
+            document.getElementById('marqueeText').innerHTML = `<span class="rainbow-text">${repeatedText}</span>`;
+            adjustAnimation();
+        }
+
+        function adjustAnimation() {
+            const container = document.getElementById('marqueeContainer');
+            const content = document.getElementById('marqueeText');
+            const speed = document.getElementById('speedInput').value;
+            const containerWidth = container.offsetWidth;
+            const contentWidth = content.offsetWidth;
+            const duration = (contentWidth / containerWidth) * speed;
+            content.style.animation = `marquee ${duration}s linear infinite`;
+        }
+
+        function updateHeight() {
+            const height = document.getElementById('heightInput').value;
+            if (!document.body.classList.contains('fullscreen')) {
+                document.getElementById('marqueeContainer').style.height = `${height}px`;
+            }
+        }
+
+        function updateFontSize() {
+            const fontSize = document.getElementById('fontSizeInput').value;
+            document.getElementById('marqueeText').style.fontSize = `${fontSize}px`;
+            adjustAnimation();
+        }
+
+        function updateSpeed() {
+            adjustAnimation();
+        }
+
+        function updateText() {
+            const newText = document.getElementById('textInput').value;
+            updateMarqueeContent(newText);
+        }
+
+        function toggleFullscreen() {
+            document.body.classList.toggle('fullscreen');
+            const button = document.getElementById('fullscreenToggle');
+            if (document.body.classList.contains('fullscreen')) {
+                button.innerHTML = '⤓';
+                document.getElementById('marqueeContainer').style.height = 'auto';
+            } else {
+                button.innerHTML = '⤢';
+                updateHeight();
+            }
+            adjustAnimation();
+        }
+
+        // 初始化
+        updateHeight();
+        updateFontSize();
+        updateMarqueeContent(document.getElementById('textInput').value);
+        updateDateTime();
+
+        // 每秒更新時間
+        setInterval(updateDateTime, 1000);
+
+        // 監聽窗口大小變化
+        window.addEventListener('resize', adjustAnimation);
+    </script>
+</body>
+</html>

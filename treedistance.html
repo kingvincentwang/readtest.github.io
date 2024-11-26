@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>植樹模擬</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+      padding: 20px;
+    }
+    .container {
+      background: #E6E6FA;
+      padding: 20px;
+      margin: auto;
+      max-width: 1000px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	  margin-bottom: 10px;
+    }
+    .instructions {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+	  text-align:left;
+	  padding:20px;
+	  font-weight:bold;
+	  color:red;
+    }
+    .controls {
+      margin: 10px 0;
+    }
+    .controls input {
+      padding: 10px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 150px;
+      margin-right: 10px;
+    }
+    .scenario-container {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    .scenario {
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      background-color: #f9f9f9;
+    }
+    .scenario h3 {
+      margin-bottom: 15px;
+    }
+    .planting-area {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .drop-zone {
+      width: 60px;
+      height: 80px;
+      border: 2px dashed #ccc;
+      border-radius: 5px;
+      background-color: #e8f5e9;
+      position: relative;
+      cursor: pointer;
+	  display: flex; /* 使子元素可對齊 */
+      align-items: flex-end; /* 子元素靠下 */
+      justify-content: center;
+    }
+    .drop-zone img {
+      width: auto;
+      height: 100%; /* 樹的高度填滿區塊 */
+      display: block; /* 確保對齊底部 */
+      margin-top: auto; /* 自動向下對齊 */
+    }
+    .drop-zone.start::before {
+      content: "起點";
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #ff5722;
+      color: white;
+      font-size: 0.9em;
+      padding: 2px 5px;
+      border-radius: 5px;
+    }
+    .drop-zone.end {
+      border-color: #3f51b5;
+    }
+    .drop-zone.end::after {
+      content: "終點";
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #3f51b5;
+      color: white;
+      font-size: 0.9em;
+      padding: 2px 5px;
+      border-radius: 5px;
+    }
+    .distance-line-container {
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      position: relative;
+    }
+    .distance-line {
+      width: 60px;
+      height: 2px;
+      background-color: black;
+    }
+    .distance-label {
+      color: red;
+      font-weight: bold;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+    }
+    .formula {
+      font-size: 1em;
+      color: blue;
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: left;
+      display: none; /* 初始隱藏 */
+    }
+    .result {
+      margin-top: 10px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    .correct {
+      color: green;
+    }
+    .incorrect {
+      color: red;
+    }
+    .draggable-end {
+      display: inline-block;
+      padding: 5px 10px;
+      background-color: #3f51b5;
+      color: white;
+      font-size: 0.9em;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: grab;
+      margin-right: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    footer {
+      margin-top: 40px;
+      background-color: #E6E6FA;
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      max-width: 1000px;
+      margin: auto;
+      font-size: 0.9em;
+	  font-weight: bold;
+      color: #555;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+  <h1>植樹問題</h1>
+    <div class="instructions">
+      以下模擬植樹情況：<br>💡 點擊空白區域添加或移除樹木，拖曳「終點」至目標區塊!
+	  <br>💡 並輸入起點至終點的距離進行驗證。<br>💡 建議樹木不要超過10，餘以此類推出公式即可!!
+    </div>
+    <div class="controls">
+      <label for="tree-count-input">樹木棵數：</label>
+      <input type="number" id="tree-count-input" placeholder="輸入樹木棵數" value="3" oninput="generateScenarios()">
+      <label for="distance-input">兩樹之間距離（單位：公尺）：</label>
+      <input type="number" id="distance-input" placeholder="輸入距離" value="3" oninput="updateDistances()">
+    </div>
+    <div class="scenario-container"></div>
+  </div>
+
+  <footer>
+    設計者：Vincent Wang
+  </footer>
+
+  <script>
+    const scenarios = [
+      { description: "前種，後不種", formula: "棵數" },
+      { description: "前不種，後種", formula: "棵數" },
+      { description: "前後都不種", formula: "棵數 + 1" },
+      { description: "前後都種", formula: "棵數 - 1" }
+    ];
+    const treeImageSrc = "https://drive.google.com/thumbnail?id=1Yj-ETMDs3FJyQgrPsI0kV4AlY0QKIFqi&sz=w120";
+
+    function generateScenarios() {
+      const treeCount = parseInt(document.getElementById("tree-count-input").value, 10) || 3;
+      const container = document.querySelector(".scenario-container");
+      container.innerHTML = "";
+      scenarios.forEach((scenario, index) => {
+        const div = document.createElement("div");
+        div.classList.add("scenario");
+        div.innerHTML = `
+          <h3>${scenario.description}</h3>
+          <div id="planting-area-${index}" class="planting-area"></div>
+          <div class="controls">
+            <div id="end-text-${index}" class="draggable-end" draggable="true" ondragstart="dragStart(event)">
+              終點
+            </div>
+            <label for="manual-distance-${index}">輸入總距離：</label>
+            <input type="number" id="manual-distance-${index}" placeholder="輸入距離">
+            <button onclick="calculateDistance(${index})">計算起點至終點距離</button>
+            <button onclick="resetScenario(${index})">重置</button>
+          </div>
+          <div id="formula-${index}" class="formula"></div>
+          <div id="result-${index}" class="result"></div>
+        `;
+        container.appendChild(div);
+        generatePlantingArea(treeCount + 2, index);
+      });
+    }
+
+    function generatePlantingArea(blockCount, index) {
+      const plantingArea = document.getElementById(`planting-area-${index}`);
+      plantingArea.innerHTML = "";
+      const distance = parseInt(document.getElementById("distance-input").value, 10) || 3;
+
+      for (let i = 0; i < blockCount; i++) {
+        const zone = document.createElement("div");
+        zone.classList.add("drop-zone");
+        zone.setAttribute("onclick", "toggleTree(this)");
+        zone.setAttribute("ondragover", "allowDrop(event)");
+        zone.setAttribute("ondrop", `dropEnd(event, ${index})`);
+        if (i === 0) {
+          zone.classList.add("start");
+        }
+        plantingArea.appendChild(zone);
+
+        if (i < blockCount - 1) {
+          const distanceContainer = document.createElement("div");
+          distanceContainer.classList.add("distance-line-container");
+          const distanceLabel = document.createElement("div");
+          distanceLabel.classList.add("distance-label");
+          distanceLabel.textContent = `${distance} 公尺`;
+          const distanceLine = document.createElement("div");
+          distanceLine.classList.add("distance-line");
+          distanceContainer.appendChild(distanceLabel);
+          distanceContainer.appendChild(distanceLine);
+          plantingArea.appendChild(distanceContainer);
+        }
+      }
+    }
+
+    function updateDistances() {
+      const distance = parseInt(document.getElementById("distance-input").value, 10) || 3;
+      const distanceLabels = document.querySelectorAll(".distance-label");
+      distanceLabels.forEach(label => {
+        label.textContent = `${distance} 公尺`;
+      });
+    }
+
+    function toggleTree(zone) {
+      if (zone.classList.contains("filled")) {
+        zone.innerHTML = "";
+        zone.classList.remove("filled");
+      } else {
+        zone.innerHTML = `<img src="${treeImageSrc}" alt="樹木">`;
+        zone.classList.add("filled");
+      }
+    }
+
+    function dragStart(event) {
+      event.dataTransfer.setData("text/plain", "end");
+    }
+
+    function allowDrop(event) {
+      event.preventDefault();
+    }
+
+    function dropEnd(event, index) {
+      event.preventDefault();
+      const zone = event.target.closest(".drop-zone");
+      const plantingArea = document.getElementById(`planting-area-${index}`);
+      plantingArea.querySelectorAll(".drop-zone.end").forEach(end => {
+        end.classList.remove("end");
+      });
+      zone.classList.add("end");
+    }
+
+    function calculateDistance(index) {
+      const treeCount = parseInt(document.getElementById("tree-count-input").value, 10);
+      const distance = parseInt(document.getElementById("distance-input").value, 10);
+      const manualDistance = parseInt(document.getElementById(`manual-distance-${index}`).value, 10);
+      const formulaDiv = document.getElementById(`formula-${index}`);
+      const resultDiv = document.getElementById(`result-${index}`);
+
+      let intervalCount;
+      switch (index) {
+        case 0:
+        case 1:
+          intervalCount = treeCount;
+          break;
+        case 2:
+          intervalCount = treeCount + 1;
+          break;
+        case 3:
+          intervalCount = treeCount - 1;
+          break;
+      }
+
+      const totalDistance = intervalCount * distance;
+
+      // 顯示公式推導
+      formulaDiv.style.display = "block";
+      formulaDiv.innerHTML = `
+        推導：間隔數 = ${scenarios[index].formula}<br>
+        計算：間隔數 ${intervalCount} × 每樹距離 ${distance} 公尺 = 總距離 ${totalDistance} 公尺
+      `;
+
+      // 回饋結果
+      if (manualDistance === totalDistance) {
+        resultDiv.textContent = "正確！";
+        resultDiv.className = "result correct";
+      } else {
+        resultDiv.textContent = `錯誤！應為 ${totalDistance} 公尺。`;
+        resultDiv.className = "result incorrect";
+      }
+    }
+
+    function resetScenario(index) {
+      const plantingArea = document.getElementById(`planting-area-${index}`);
+      plantingArea.querySelectorAll(".drop-zone").forEach(zone => {
+        zone.innerHTML = "";
+        zone.classList.remove("filled", "end");
+      });
+      document.getElementById(`manual-distance-${index}`).value = "";
+      const formulaDiv = document.getElementById(`formula-${index}`);
+      formulaDiv.style.display = "none";
+      const resultDiv = document.getElementById(`result-${index}`);
+      resultDiv.textContent = "";
+    }
+
+    generateScenarios();
+  </script>
+</body>
+</html>

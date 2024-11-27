@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>互動式雞兔同籠計算器</title>
+    <style>
+        /* 前面的樣式保持不變 */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+			  
+        }
+		
+        .animals-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e8f4ff;
+            border-radius: 8px;
+        }
+        .animal {
+            width: 100px;
+            height: 120px;
+            cursor: move;
+            position: relative;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .animal img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+        .animal .label {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+        }
+        .dropzone {
+            min-height: 200px;
+            border: 2px dashed #4CAF50;
+            border-radius: 8px;
+            margin: 20px 0;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            background-color: #f9f9f9;
+            align-items: flex-start;
+            align-content: flex-start;
+        }
+        .dropzone.dragover {
+            background-color: #e8f5e9;
+            border-color: #2e7d32;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e6f3ff;
+            border-radius: 8px;
+        }
+        .dropped-animal {
+            width: 80px;
+            height: 100px;
+            margin: 5px;
+            position: relative;
+            background-color: white;
+            padding: 5px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .dropped-animal img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+        .remove-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .remove-btn:hover {
+            background-color: #cc0000;
+        }
+        .explanation {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff3e0;
+            border-left: 4px solid #ffc107;
+			   border-radius: 4px;
+        }
+		/* 新增公式推導區塊的樣式 */
+        .formula-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff3e0;
+            border-radius: 8px;
+            border-left: 4px solid #3f51b5;
+        }
+        
+        .formula-step {
+            margin: 10px 0;
+            padding: 8px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .formula-step.highlighted {
+            background-color: #e8eaf6;
+            border-left: 3px solid #3f51b5;
+        }
+        
+        .result-row {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stats {
+            flex: 1;
+			   color:red;
+			   font-size: 1.2em;
+        }
+        
+        .formula-section {
+            flex: 1;
+			font-size: 1em;
+			
+        }
+        
+        .variable {
+            color: #1a237e;
+            font-weight: bold;
+        }
+        
+        .math {
+            font-family: "Times New Roman", serif;
+            font-style: italic;
+        }
+		/* 新增國小解法區塊的樣式 */
+        .kids-solution {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff3e0;
+            border-radius: 8px;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .solution-title {
+            font-size: 1.2em;
+            color: #e65100;
+            margin-bottom: 15px;
+        }
+        
+        .solution-step {
+            background-color: white;
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-color: #ff9800;
+            color: white;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .hint {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+            padding-left: 34px;
+        }
+        
+        .example-calculation {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+		.footer {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff3e0;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            border-radius: 8px 8px 8px 8px;
+        }
+        
+        .designer-info {
+            display: inline-flex;
+            align-items: center;
+			  font-weight: bold;
+            gap: 8px;
+        }
+        
+        .designer-name {
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <center><h1><img src="https://drive.google.com/thumbnail?id=1zJy1ckO4hV8gS9qDI7mC32oB2bphJWEb&sz=w80" alt="雞">
+		  互動式雞兔同籠計算器
+		  <img src="https://drive.google.com/thumbnail?id=143U73CpdJWj9d5VUSUK2WcUeZ8gcdtXA&sz=w80" alt="兔"></h1></center>
+
+        <div class="explanation">
+            <h3>使用說明：</h3>
+            <p>1. 從下方拖曳雞或兔子到展示區域</p>
+            <p>2. 系統會自動計算頭數和腳數</p>
+            <p>3. 點擊動物上的 X 按鈕可以移除</p>
+        </div>
+
+        <div class="animals-container">
+            <div class="animal" draggable="true" data-type="chicken">
+                <img src="https://drive.google.com/thumbnail?id=1zJy1ckO4hV8gS9qDI7mC32oB2bphJWEb&sz=w240" alt="雞">
+                <div class="label">雞 (2隻腳)</div>
+            </div>
+            <div class="animal" draggable="true" data-type="rabbit">
+                <img src="https://drive.google.com/thumbnail?id=143U73CpdJWj9d5VUSUK2WcUeZ8gcdtXA&sz=w240" alt="兔">
+                <div class="label">兔 (4隻腳)</div>
+            </div>
+        </div>
+
+        <div class="dropzone" id="displayZone">
+            <!-- 拖曳的動物會在這裡顯示 -->
+        </div>
+
+        <div class="stats">
+            <div>
+                <h2>總計：</h2><b>
+                <p>頭數：<span id="totalHeads">0</span></p>
+                <p>腳數：<span id="totalLegs">0</span></p>
+            </div>
+            <div>
+                <h2>明細：</h2>
+                <p>雞：<span id="chickenCount">0</span> 隻</p>
+                <p>兔：<span id="rabbitCount">0</span> 隻</p></b>
+            </div>
+        </div>
+		<!-- 新增國小解法區塊 -->
+        <div class="kids-solution">
+            <div class="solution-title"><h3>🌟 國小生解題方法</h3></div>
+            
+            <div class="solution-step">
+                <span class="step-number">1</span>
+                <span>先假設全部都是雞<font color="red"><b>(題目以上面區塊的總計為例)</b></font></span>
+                <div class="hint">
+                    例如：雞兔共10個頭(隻)，先當作10隻雞
+                </div>
+                <div class="example-calculation">
+                    雞腳數 = <span id="allChickenLegs">0</span> 隻腳
+                </div>
+            </div>
+            
+            <div class="solution-step">
+                <span class="step-number">2</span>
+                <span>計算還差幾隻腳才能達到總腳數</span>
+                <div class="hint">
+                    實際腳數 - 假設的雞腳數 = 還差的腳數
+                </div>
+                <div class="example-calculation">
+                    還差的腳數 = <span id="legDifference">0</span> 隻腳
+                </div>
+            </div>
+            
+            <div class="solution-step">
+                <span class="step-number">3</span>
+                <span>算出兔子的數量</span>
+                <div class="hint">
+                    一隻兔子比雞多2隻腳，所以用還差的腳數除以2
+                </div>
+                <div class="example-calculation">
+                    兔子數量 = <span id="kidsSolutionRabbits">0</span> 隻
+                </div>
+            </div>
+            
+            <div class="solution-step">
+                <span class="step-number">4</span>
+                <span>算出雞的數量</span>
+                <div class="hint">
+                    總頭數 - 兔子數量 = 雞的數量
+                </div>
+                <div class="example-calculation">
+                    雞的數量 = <span id="kidsSolutionChickens">0</span> 隻
+                </div>
+            </div>
+			
+        </div>
+		  <!-- 新增公式推導區塊 -->
+			<div class="formula-section">
+				<h2>🌟國中生公式推導：</h2>
+				<div class="formula-step">
+					設雞的數量為 <span class="variable">x</span>，兔子數量為 <span class="variable">y</span>
+				</div>
+				<div class="formula-step">
+					頭的總數：<span class="math">x + y = </span><span id="formulaHeads">0</span>
+				</div>
+				<div class="formula-step">
+					腳的總數：<span class="math">2x + 4y = </span><span id="formulaLegs">0</span>
+				</div>
+				<div class="formula-step highlighted">
+					解聯立方程式：<br>
+					<span class="math">x + y = h</span> (h為頭數)<br>
+					<span class="math">2x + 4y = f</span> (f為腳數)
+				</div>
+				<div class="formula-step">
+					<font color="red" size="4"><b>計算結果：<br>
+					雞 = <span id="formulaChicken">0</span> 隻<br>
+					兔 = <span id="formulaRabbit">0</span> 隻</b></font>
+				</div>
+			</div>
+			<div class="footer">
+				<div class="designer-info">
+					設計者：<span class="designer-name">Vincent Wang</span>
+				</div>
+			</div>
+    </div>
+
+    <script>
+        let animals = [];
+        const chickenImgUrl = "https://drive.google.com/thumbnail?id=1zJy1ckO4hV8gS9qDI7mC32oB2bphJWEb&sz=w240";
+        const rabbitImgUrl = "https://drive.google.com/thumbnail?id=143U73CpdJWj9d5VUSUK2WcUeZ8gcdtXA&sz=w240"; // 這裡需要替換成兔子的圖片URL
+
+        function updateStats() {
+            const chickenCount = animals.filter(a => a.type === 'chicken').length;
+            const rabbitCount = animals.filter(a => a.type === 'rabbit').length;
+            const totalHeads = chickenCount + rabbitCount;
+            const totalLegs = (chickenCount * 2) + (rabbitCount * 4);
+
+            // 更新統計數據
+            document.getElementById('totalHeads').textContent = totalHeads;
+            document.getElementById('totalLegs').textContent = totalLegs;
+            document.getElementById('chickenCount').textContent = chickenCount;
+            document.getElementById('rabbitCount').textContent = rabbitCount;
+
+            // 更新公式區域
+            document.getElementById('formulaHeads').textContent = totalHeads;
+            document.getElementById('formulaLegs').textContent = totalLegs;
+            document.getElementById('formulaChicken').textContent = chickenCount;
+            document.getElementById('formulaRabbit').textContent = rabbitCount;
+			
+				  // 更新國小解法的計算過程
+            const assumeAllChickenLegs = totalHeads * 2;
+            const legDiff = totalLegs - assumeAllChickenLegs;
+            const calculatedRabbits = legDiff / 2;
+            const calculatedChickens = totalHeads - calculatedRabbits;
+
+            document.getElementById('allChickenLegs').textContent = assumeAllChickenLegs;
+            document.getElementById('legDifference').textContent = legDiff;
+            document.getElementById('kidsSolutionRabbits').textContent = calculatedRabbits;
+            document.getElementById('kidsSolutionChickens').textContent = calculatedChickens;	
+        }
+
+        function createDroppedAnimal(type) {
+            const div = document.createElement('div');
+            div.className = 'dropped-animal';
+            
+            const img = document.createElement('img');
+            img.src = type === 'chicken' ? chickenImgUrl : rabbitImgUrl;
+            img.alt = type === 'chicken' ? '雞' : '兔';
+            
+            const label = document.createElement('div');
+            label.className = 'label';
+            label.textContent = type === 'chicken' ? '雞' : '兔';
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-btn';
+            removeBtn.textContent = 'X';
+            removeBtn.onclick = function() {
+                const index = animals.findIndex(a => a.element === div);
+                if (index > -1) {
+                    animals.splice(index, 1);
+                    div.remove();
+                    updateStats();
+                }
+            };
+
+            div.appendChild(img);
+            div.appendChild(label);
+            div.appendChild(removeBtn);
+            return div;
+        }
+
+        // 拖曳相關事件處理
+        document.querySelectorAll('.animal').forEach(animal => {
+            animal.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('text/plain', this.dataset.type);
+                this.style.opacity = '0.5';
+            });
+            
+            animal.addEventListener('dragend', function(e) {
+                this.style.opacity = '1';
+            });
+        });
+
+        const dropzone = document.getElementById('displayZone');
+
+        dropzone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', function(e) {
+            this.classList.remove('dragover');
+        });
+
+        dropzone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            const type = e.dataTransfer.getData('text/plain');
+            const droppedAnimal = createDroppedAnimal(type);
+            this.appendChild(droppedAnimal);
+            animals.push({ type: type, element: droppedAnimal });
+            updateStats();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>順流逆流船速問題</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        .river {
+            height: 120px;
+            background: linear-gradient(45deg, #4682b4, #87ceeb);
+            position: relative;
+            margin: 20px 0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .boat {
+            width: 50px;
+            height: 30px;
+            position: absolute;
+            top: 45px;
+            transition: left 3s linear;
+            cursor: pointer;
+        }
+        .boat-upstream {
+            transform: scaleX(-1);
+        }
+        .wave {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 255, 255, 0.1) 10px,
+                rgba(255, 255, 255, 0.1) 20px
+            );
+            animation: wave 20s linear infinite;
+        }
+        @keyframes wave {
+            0% { background-position: 0 0; }
+            100% { background-position: 500px 0; }
+        }
+        .timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 1.2em;
+        }
+        .formula-box {
+            background-color: #e6f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #4682b4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        input {
+            padding: 5px;
+            margin: 5px;
+            width: 60px;
+        }
+        .question {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff;
+            border-left: 4px solid #4682b4;
+            border-radius: 5px;
+        }
+        .question-practice {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .solution-steps {
+            display: none;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #fff;
+            border-left: 3px solid #28a745;
+        }
+        .hint {
+            display: none;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #fff3cd;
+            border-radius: 5px;
+        }
+        .try-button {
+            background-color: #28a745;
+        }
+        .try-button:hover {
+            background-color: #218838;
+        }
+        #speedDisplay, #distanceDisplay {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #4682b4;
+        }
+		.footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            background-color: #4682b4;
+            color: white;
+            border-radius: 0 0 10px 10px;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>順流逆流船速問題</h1>
+        
+        <!-- 基本概念區 -->
+        <div class="section">
+            <h2>1. 基本概念</h2>
+            <div class="formula-box">
+                <p>船速（靜水速度）：船在靜止的水中航行的速度</p>
+                <p>✧ 順流速度 = 船速 + 水流速度（船順著水流方向走）</p>
+                <p>✧ 逆流速度 = 船速 - 水流速度（船逆著水流方向走）</p>
+                <p>✧ 船速 = (順流速度 + 逆流速度) ÷ 2</p>
+                <p>✧ 水流速度 = (順流速度 - 逆流速度) ÷ 2</p>
+            </div>
+        </div>
+
+        <!-- 互動演示區 -->
+        <div class="section">
+            <h2>2. 互動演示</h2>
+            <div>
+                <label>船速（靜水速度）：</label>
+                <input type="number" id="boatSpeed" value="10" min="1"> km/h
+                <label>水流速度：</label>
+                <input type="number" id="waterSpeed" value="2" min="1"> km/h
+                <label>航行距離：</label>
+                <input type="number" id="distance" value="1" min="1"> km
+            </div>
+            <div class="river">
+                <div class="wave"></div>
+                <img src="https://wwwgseshccedutw1681688.on.drv.tw/web/boat.png" alt="boat" id="boat" class="boat" style="left: 0px;">
+                <div class="timer" id="timer">00:00.0</div>
+            </div>
+            <button onclick="demonstrateUpstream()">演示逆流</button>
+            <button onclick="demonstrateDownstream()">演示順流</button>
+            <button onclick="resetBoat()">重置</button>
+            <div id="speedDisplay"></div>
+            <div id="distanceDisplay"></div>
+        </div>
+
+        <!-- 練習題1：基礎理解 -->
+        <div class="section">
+            <h2>3. 基礎練習</h2>
+            <div class="question-practice">
+                <h3>練習題1：使用上方演示，設定：</h3>
+                <ul>
+                    <li>靜水速度：15 km/h</li>
+                    <li>水流速度：3 km/h</li>
+                    <li>航行距離：2 km</li>
+                </ul>
+                <p>觀察並回答：</p>
+                <ol>
+                    <li>順流時的速度是多少？</li>
+                    <li>逆流時的速度是多少？</li>
+                </ol>
+                <button onclick="setupQuestion(1)" class="try-button">套用數值</button>
+                <button onclick="toggleContent('hint1', this)">顯示提示</button>
+                <button onclick="toggleContent('solution1', this)">查看解答</button>
+                <div id="hint1" class="hint">
+                    觀察演示中的速度顯示，或使用公式：順流 = 靜水 + 水流，逆流 = 靜水 - 水流
+                </div>
+                <div id="solution1" class="solution-steps">
+                    解答：<br>
+                    1. 順流速度 = 15 + 3 = 18 km/h<br>
+                    2. 逆流速度 = 15 - 3 = 12 km/h
+                </div>
+            </div>
+        </div>
+
+        <!-- 練習題2：時間比較 -->
+        <div class="section">
+            <h2>4. 時間計算練習</h2>
+            <div class="question-practice">
+                <h3>練習題2：觀察時間差異</h3>
+                <p>使用演示工具，設定：</p>
+                <ul>
+                    <li>靜水速度：10 km/h</li>
+                    <li>水流速度：2 km/h</li>
+                    <li>航行距離：4 km</li>
+                </ul>
+                <p>比較順流和逆流所需時間的差異：</p>
+                <button onclick="setupQuestion(2)" class="try-button">套用數值</button>
+                <button onclick="toggleContent('hint2', this)">顯示提示</button>
+                <button onclick="toggleContent('solution2', this)">查看解答</button>
+                <div id="hint2" class="hint">
+                    記錄計時器顯示的時間，並計算差異。注意速度與時間的反比關係。
+                </div>
+                <div id="solution2" class="solution-steps">
+                    解答：<br>
+                    順流速度 = 12 km/h，時間 = 4/12 = 0.33 小時 = 20 分鐘<br>
+                    逆流速度 = 8 km/h，時間 = 4/8 = 0.5 小時 = 30 分鐘<br>
+                    時間差異 = 10 分鐘
+                </div>
+            </div>
+        </div>
+
+        <!-- 練習題3：進階練習 -->
+        <div class="section">
+            <h2>5. 進階應用練習</h2>
+            <div class="question-practice">
+                <h3>練習題3：速率分析</h3>
+                <p>實驗與觀察：</p>
+                <ol>
+                    <li>將靜水速度固定在 12 km/h</li>
+                    <li>依序嘗試水流速度：1, 2, 3 km/h</li>
+                    <li>觀察順流和逆流時間的變化規律</li>
+                </ol>
+                <button onclick="toggleContent('hint3', this)">顯示提示</button>
+                <button onclick="toggleContent('solution3', this)">查看解答</button>
+                <div id="hint3" class="hint">
+                    將每次實驗的結果記錄下來，找出水流速度與時間變化的關係。
+                </div>
+                <div id="solution3" class="solution-steps">
+                    實驗結果分析：<br>
+                    水流 1 km/h：順逆流速度差 2 km/h<br>
+                    水流 2 km/h：順逆流速度差 4 km/h<br>
+                    水流 3 km/h：順逆流速度差 6 km/h<br>
+                    結論：水流速度每增加1km/h，順逆流速度差增加2km/h
+                </div>
+            </div>
+        </div>
+		<div class="footer">
+            設計者：Vincent Wang
+        </div>
+    </div>
+
+    <script>
+        const boat = document.getElementById('boat');
+        const timer = document.getElementById('timer');
+        const speedDisplay = document.getElementById('speedDisplay');
+        const distanceDisplay = document.getElementById('distanceDisplay');
+        const ANIMATION_BASE_TIME = 5;
+        let startTime;
+        let timerInterval;
+			const REAL_TIME_SCALE = 20; // 實際時間縮放比例，例如 1:20
+        function formatTime(seconds) {
+				const hours = Math.floor(seconds / 3600);
+				const minutes = Math.floor((seconds % 3600) / 60);
+				const secs = Math.floor(seconds % 60);
+				return `${hours > 0 ? hours + '時' : ''}${minutes.toString().padStart(2, '0')}分${secs.toString().padStart(2, '0')}秒`;
+			}
+
+
+        function updateTimer(startValue, endValue, duration) {
+				let startTime = null;
+				
+				function update(currentTime) {
+					if (!startTime) startTime = currentTime;
+					const elapsed = currentTime - startTime;
+					const progress = Math.min(elapsed / duration, 1);
+					
+					const currentValue = startValue + (endValue - startValue) * progress;
+					timer.textContent = formatTime(currentValue);
+					
+					if (progress < 1) {
+						requestAnimationFrame(update);
+					}
+				}
+				
+				requestAnimationFrame(update);
+			}
+
+        function startTimer() {
+            startTime = Date.now();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 50);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function resetBoat() {
+				boat.style.transition = 'none';
+				boat.style.left = '0px';
+				boat.classList.remove('boat-upstream');
+				speedDisplay.textContent = '';
+				distanceDisplay.textContent = '';
+				timer.textContent = '00分00秒';
+				void boat.offsetWidth;
+			}
+
+        function demonstrateUpstream() {
+				const boatSpeed = parseInt(document.getElementById('boatSpeed').value);
+				const waterSpeed = parseInt(document.getElementById('waterSpeed').value);
+				const distance = parseInt(document.getElementById('distance').value);
+				const upstreamSpeed = boatSpeed - waterSpeed;
+				
+				if (upstreamSpeed <= 0) {
+					alert('逆流速度太慢，船無法前進！請調整速度。');
+					return;
+				}
+
+				resetBoat();
+				boat.classList.add('boat-upstream');
+				
+				// 計算實際所需時間（秒）
+				const realTime = (distance / upstreamSpeed) * 3600;
+				// 動畫時間（毫秒）
+				const animationTime = (realTime / REAL_TIME_SCALE) * 1000;
+				
+				boat.style.left = '700px';
+				void boat.offsetWidth;
+				
+				boat.style.transition = `left ${animationTime/1000}s linear`;
+				boat.style.left = '0px';
+				
+				speedDisplay.textContent = `逆流速度：${upstreamSpeed} km/h`;
+				distanceDisplay.textContent = `實際行駛時間：${formatTime(realTime)}`;
+				
+				// 更新計時器
+				updateTimer(0, realTime, animationTime);
+			}
+
+        function demonstrateDownstream() {
+				const boatSpeed = parseInt(document.getElementById('boatSpeed').value);
+				const waterSpeed = parseInt(document.getElementById('waterSpeed').value);
+				const distance = parseInt(document.getElementById('distance').value);
+				const downstreamSpeed = boatSpeed + waterSpeed;
+				
+				resetBoat();
+				
+				// 計算實際所需時間（秒）
+				const realTime = (distance / downstreamSpeed) * 3600;
+				// 動畫時間（毫秒）
+				const animationTime = (realTime / REAL_TIME_SCALE) * 1000;
+				
+				boat.style.transition = `left ${animationTime/1000}s linear`;
+				boat.style.left = '700px';
+				
+				speedDisplay.textContent = `順流速度：${downstreamSpeed} km/h`;
+				distanceDisplay.textContent = `實際行駛時間：${formatTime(realTime)}`;
+				
+				// 更新計時器
+				updateTimer(0, realTime, animationTime);
+			}
+
+        function setupQuestion(num) {
+        switch(num) {
+            case 1:
+                document.getElementById('boatSpeed').value = 15;
+                document.getElementById('waterSpeed').value = 3;
+                document.getElementById('distance').value = 2;
+                break;
+            case 2:
+                document.getElementById('boatSpeed').value = 10;
+                document.getElementById('waterSpeed').value = 2;
+                document.getElementById('distance').value = 4;
+                break;
+            case 3:
+                document.getElementById('boatSpeed').value = 12;
+                document.getElementById('waterSpeed').value = 1;
+                document.getElementById('distance').value = 3;
+                break;
+        }
+        // 重置船的位置和顯示
+        resetBoat();
+        // 高亮顯示當前練習題
+        highlightQuestion(num);
+    }
+
+    function highlightQuestion(num) {
+        // 移除所有問題的高亮
+        document.querySelectorAll('.question-practice').forEach(q => {
+            q.style.backgroundColor = '#f5f5f5';
+        });
+        // 高亮當前問題
+        const currentQuestion = document.querySelector(`.question-practice:nth-of-type(${num})`);
+        if (currentQuestion) {
+            currentQuestion.style.backgroundColor = '#e6f3ff';
+        }
+    }
+
+    function toggleContent(id, button) {
+        const content = document.getElementById(id);
+        if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+            // 更改按鈕文字
+            if (id.includes('hint')) {
+                button.textContent = '隱藏提示';
+            } else {
+                button.textContent = '隱藏解答';
+            }
+        } else {
+            content.style.display = 'none';
+            // 還原按鈕文字
+            if (id.includes('hint')) {
+                button.textContent = '顯示提示';
+            } else {
+                button.textContent = '查看解答';
+            }
+        }
+    }
+
+    // 添加鍵盤快捷鍵
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'r' || event.key === 'R') {
+            resetBoat(); // 按 R 鍵重置
+        }
+        if (event.key === 'u' || event.key === 'U') {
+            demonstrateUpstream(); // 按 U 鍵演示逆流
+        }
+        if (event.key === 'd' || event.key === 'D') {
+            demonstrateDownstream(); // 按 D 鍵演示順流
+        }
+    });
+
+    // 數值驗證函數
+    function validateInputs() {
+        const boatSpeed = parseFloat(document.getElementById('boatSpeed').value);
+        const waterSpeed = parseFloat(document.getElementById('waterSpeed').value);
+        const distance = parseFloat(document.getElementById('distance').value);
+
+        if (isNaN(boatSpeed) || isNaN(waterSpeed) || isNaN(distance)) {
+            alert('請輸入有效的數字！');
+            return false;
+        }
+
+        if (boatSpeed <= 0 || waterSpeed <= 0 || distance <= 0) {
+            alert('所有數值必須大於0！');
+            return false;
+        }
+
+        if (boatSpeed <= waterSpeed) {
+            alert('靜水速度必須大於水流速度！');
+            return false;
+        }
+
+        return true;
+    }
+
+    // 格式化時間顯示的輔助函數
+    function formatTimeForDisplay(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+        
+        let timeString = '';
+        if (hours > 0) {
+            timeString += `${hours}小時`;
+        }
+        if (minutes > 0) {
+            timeString += `${minutes}分鐘`;
+        }
+        if (remainingSeconds > 0 || timeString === '') {
+            timeString += `${remainingSeconds}秒`;
+        }
+        return timeString;
+    }
+
+    // 初始化頁面
+    window.onload = function() {
+        resetBoat();
+        // 為所有輸入框添加驗證
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('change', function() {
+                validateInputs();
+            });
+        });
+
+        // 添加鍵盤快捷說明
+        const helpText = document.createElement('div');
+        helpText.innerHTML = '快捷鍵: R-重置, U-逆流, D-順流';
+        helpText.style.color = '#666';
+        helpText.style.marginTop = '10px';
+        helpText.style.fontSize = '0.9em';
+        document.querySelector('.river').after(helpText);
+    };
+</script>
+</body>
+</html>
+            

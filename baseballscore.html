@@ -155,13 +155,7 @@
     </style>
 </head>
 <body>
-    <div class="button-container">
-        <button onclick="exportToCSV()" class="action-button export-button">匯出成績</button>
-        <button onclick="saveToJSON()" class="action-button save-button">儲存檔案</button>
-        <input type="file" id="fileInput" accept=".json">
-        <button onclick="document.getElementById('fileInput').click()" class="action-button load-button">載入檔案</button>
-        <button onclick="clearData()" class="action-button clear-button">清除資料</button>
-    </div>
+    
 
     <table>
         <thead>
@@ -290,7 +284,13 @@
             </tr>
         </tbody>
     </table>
-
+<div class="button-container">
+        <button onclick="exportToCSV()" class="action-button export-button">匯出成績</button>
+        <button onclick="saveToJSON()" class="action-button save-button">儲存檔案</button>
+        <input type="file" id="fileInput" accept=".json">
+        <button onclick="document.getElementById('fileInput').click()" class="action-button load-button">載入檔案</button>
+        <button onclick="clearData()" class="action-button clear-button">清除資料</button>
+    </div>
     <script>
         // 更新分數
 function updateScore(team, inning, change) {

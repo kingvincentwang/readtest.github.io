@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>24節氣學習</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #1a4d2e, #2d6a4f);
+            color: white;
+            margin-bottom: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .season-title {
+            text-align: center;
+            margin: 30px 0;
+            color: #1a4d2e;
+            font-size: 1.8em;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        .season-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background-color: #1a4d2e;
+        }
+        .solar-terms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            padding: 20px;
+        }
+        .term-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .term-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+        }
+        .spring::before { background: linear-gradient(90deg, #90EE90, #98FB98); }
+        .summer::before { background: linear-gradient(90deg, #FF6B6B, #FFA07A); }
+        .autumn::before { background: linear-gradient(90deg, #FFD700, #DAA520); }
+        .winter::before { background: linear-gradient(90deg, #87CEEB, #B0E0E6); }
+        
+        .term-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .term-card h3 {
+            color: #1a4d2e;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            border-bottom: 2px solid rgba(26, 77, 46, 0.2);
+            padding-bottom: 8px;
+        }
+        .term-info {
+            color: #666;
+            font-size: 0.95em;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            overflow-y: auto;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            position: relative;
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+        }
+        .close-btn {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border-radius: 50%;
+            background: #f5f5f5;
+            transition: all 0.3s ease;
+        }
+        .close-btn:hover {
+            background: #e0e0e0;
+        }
+        .info-section {
+            background: #f8f8f8;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 4px solid #1a4d2e;
+        }
+        .info-section h3 {
+            color: #1a4d2e;
+            margin-bottom: 10px;
+        }
+        .info-list {
+            list-style: none;
+            padding-left: 20px;
+        }
+        .info-list li {
+            position: relative;
+            padding: 5px 0;
+            padding-left: 20px;
+        }
+        .info-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #1a4d2e;
+        }
+        .season-indicator {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+        .season-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .season-dot.active {
+            transform: scale(1.3);
+            background: #1a4d2e;
+        }
+        @media (max-width: 768px) {
+            .solar-terms-grid {
+                grid-template-columns: 1fr;
+            }
+            .season-indicator {
+                display: none;
+            }
+        }
+		.quiz-section {
+            text-align: center;
+            padding: 40px 0;
+            margin-top: 40px;
+            background: linear-gradient(135deg, #1a4d2e, #2d6a4f);
+            border-radius: 10px;
+        }
+        
+        .quiz-button {
+            display: inline-block;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            color: #1a4d2e;
+            background-color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .quiz-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background-color: #f0f0f0;
+        }
+        
+        .quiz-title {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .quiz-description {
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>24節氣學習</h1>
+        <p>探索中國傳統曆法的智慧</p>
+    </header>
+	<center><div><iframe width="560" height="315" src="https://www.youtube.com/embed/e1O46-Dgi1c?si=erfOwal-mlHt1LQ1" 
+		title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; 
+		gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+    <div class="container" id="mainContainer"></div></center>
+	
+	<div class="container">
+		
+	
+        <div class="quiz-section">
+            <h2 class="quiz-title">測試你的二十四節氣知識</h2>
+            <p class="quiz-description">
+                完成學習了嗎？來測試一下你對二十四節氣的理解程度吧！
+                我們準備了一系列有趣的題目，幫助你鞏固所學知識。
+            </p>
+            <a href="solar-terms-quiz.html" class="quiz-button">
+                開始練習測驗
+            </a>
+        </div>
+    </div>
+    <div class="season-indicator" id="seasonIndicator"></div>
+	
+    <div class="modal" id="termModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+	
+    <script>
+        const solarTerms = {
+            spring: [
+                {
+                    name: "立春",
+                    date: "2月3日至5日",
+                    description: "標誌著春天的開始，萬物始發芽。",
+                    features: ["氣溫開始回升", "大地開始解凍", "早春花卉開始綻放", "河冰融化"],
+                    customs: ["吃春餅", "咬春", "迎春", "貼春聯", "放生"],
+                    healthTips: "早睡早起，保持規律作息，適度運動，注意保暖"
+                },
+                {
+                    name: "雨水",
+                    date: "2月18日至20日",
+                    description: "降水開始增多，氣溫繼續回升。",
+                    features: ["降雨量增加", "春雷開始出現", "蟄蟲漸醒", "植物抽芽"],
+                    customs: ["祈雨", "放生", "賞梅", "品茶"],
+                    healthTips: "注意防潮，預防感冒，保持室內通風"
+                },
+                {
+                    name: "驚蟄",
+                    date: "3月5日至7日",
+                    description: "春雷始鳴，喚醒蟄伏的生物。",
+                    features: ["雷聲漸響", "動物甦醒", "桃花綻放", "田間春耕"],
+                    customs: ["祭白虎", "踏青", "曬衣物", "清掃"],
+                    healthTips: "適當運動，順應陽氣生發，調理脾胃"
+                },
+                {
+                    name: "春分",
+                    date: "3月20日至22日",
+                    description: "晝夜平分，陰陽相等。",
+                    features: ["晝夜等長", "氣溫適中", "春暖花開", "百花盛開"],
+                    customs: ["祭祖", "插柳", "放風箏", "春遊"],
+                    healthTips: "保持作息規律，注意飲食均衡，適量運動"
+                },
+                {
+                    name: "清明",
+                    date: "4月4日至6日",
+                    description: "氣候清爽明朗，萬物皆潔淨明快。",
+                    features: ["天氣晴朗", "細雨綿綿", "草木繁茂", "萬物生長"],
+                    customs: ["掃墓", "踏青", "插柳", "放風箏", "吃清明果"],
+                    healthTips: "注意保暖，預防感冒，適度戶外活動"
+                },
+                {
+                    name: "穀雨",
+                    date: "4月19日至21日",
+                    description: "雨水滋潤大地，有利於穀物生長。",
+                    features: ["春雨頻繁", "穀物生長", "田間農忙", "溫度回升"],
+                    customs: ["祈年", "插秧", "喝穀雨茶", "賞花"],
+                    healthTips: "防濕防寒，適度運動，注意飲食調理"
+                }
+            ],
+            summer: [
+                {
+                    name: "立夏",
+                    date: "5月5日至7日",
+                    description: "夏天的開始，萬物生長旺盛。",
+                    features: ["氣溫升高", "蟬開始鳴叫", "夏花綻放", "作物茁壯"],
+                    customs: ["稱體重", "吃應季水果", "曬太陽", "飲綠茶"],
+                    healthTips: "防暑降溫，多喝水，注意防曬"
+                },
+                {
+                    name: "小滿",
+                    date: "5月20日至22日",
+                    description: "穀類開始結實，但未完全成熟。",
+                    features: ["穀物漸滿", "氣溫升高", "降雨增多", "濕度增大"],
+                    customs: ["賞花", "祈禱", "採茶", "喝酸梅湯"],
+                    healthTips: "注意防暑，清淡飲食，適量運動"
+                },
+                {
+                    name: "芒種",
+                    date: "6月5日至7日",
+                    description: "麥類等農作物成熟，可以收穫播種。",
+                    features: ["麥類成熟", "悶熱天氣", "種植水稻", "多雨"],
+                    customs: ["祭田神", "插秧", "晾曬", "摘瓜果"],
+                    healthTips: "預防中暑，注意飲食衛生，避免暴飲暴食"
+                },
+                {
+                    name: "夏至",
+                    date: "6月21日至22日",
+                    description: "北半球一年中白晝最長的一天。",
+                    features: ["白晝最長", "正午日影最短", "氣溫最高", "雷雨多發"],
+                    customs: ["吃面條", "納涼", "避暑", "喝綠豆湯"],
+                    healthTips: "防暑降溫，清淡飲食，避免劇烈運動"
+                },
+                {
+                    name: "小暑",
+                    date: "7月6日至8日",
+                    description: "進入炎熱季節，但還未到最熱。",
+                    features: ["氣溫升高", "雷雨頻繁", "濕度大", "蟬鳴不斷"],
+                    customs: ["喝茶", "吃麵", "食補", "避暑"],
+                    healthTips: "注意防暑，多喝水，避免過度運動"
+                },
+                {
+                    name: "大暑",
+                    date: "7月22日至24日",
+                    description: "一年中最熱的時節。",
+                    features: ["酷暑難耐", "午後雷陣雨", "濕熱難耐", "蚊蟲滋生"],
+                    customs: ["吃冷飲", "避暑", "涼拌", "喝綠豆湯"],
+                    healthTips: "預防中暑，補充水分，避免曝曬"
+                }
+            ],
+            autumn: [
+                {
+                    name: "立秋",
+                    date: "8月7日至9日",
+                    description: "秋天的開始，暑氣漸消。",
+                    features: ["暑退涼生", "早晚轉涼", "果實成熟", "葉開始變黃"],
+                    customs: ["貼秋膘", "吃秋果", "賞月", "啃西瓜"],
+                    healthTips: "順應天氣變化，早睡早起，養陰潤燥"
+                },
+                {
+                    name: "處暑",
+                    date: "8月22日至24日",
+                    description: "暑氣即將結束，天氣漸涼。",
+                    features: ["暑熱減退", "涼風徐來", "白露將降", "夜涼"],
+                    customs: ["喝茶", "賞月", "納涼", "曬秋"],
+                    healthTips: "注意晝夜溫差，及時添衣，預防感冒"
+                },
+                {
+                    name: "白露",
+                    date: "9月7日至9日",
+                    description: "露水漸多，天氣轉涼。",
+                    features: ["露水增多", "天高氣爽", "蟲鳴漸弱", "桂花飄香"],
+                    customs: ["賞月", "品茶", "祭月", "賞桂花"],
+                    healthTips: "預防感冒，注意保暖，養生防秋燥"
+                },
+                {
+                    name: "秋分",
+                    date: "9月22日至24日",
+                    description: "晝夜再次等長，陰陽相半。",
+                    features: ["晝夜均分", "天高雲淡", "風清氣爽", "層林漸染"],
+                    customs: ["祭月", "賞月", "品秋果", "登高望遠"],
+                    healthTips: "保持作息規律，預防感冒，滋陰潤燥"
+                },
+                {
+                    name: "寒露",
+                    date: "10月8日至9日",
+                    description: "露水漸寒，天氣更涼。",
+                    features: ["露水轉寒", "氣溫驟降", "秋意漸濃", "楓葉轉紅"],
+                    customs: ["賞紅葉", "品茗", "晾曬", "賞菊"],
+                    healthTips: "早晚添衣，潤肺養燥，適度運動"
+                },
+                {
+                    name: "霜降",
+                    date: "10月23日至24日",
+                    description: "開始出現霜凍，天氣轉寒。",
+                    features: ["霜開始降", "氣溫顯著下降", "樹葉紛落", "秋收結束"],
+                    customs: ["賞秋", "吃柿子", "進補", "賞菊"],
+                    healthTips: "及時添衣，預防感冒，注意保暖"
+                }
+            ],
+            winter: [
+                {
+                    name: "立冬",
+                    date: "11月7日至8日",
+                    description: "冬季的開始，萬物開始蟄伏。",
+                    features: ["天氣轉寒", "落葉紛飛", "動物冬眠", "北風增強"],
+                    customs: ["吃餃子", "貼冬膘", "進補", "冬釀"],
+                    healthTips: "注意保暖，適度運動，養精蓄銳"
+                },
+                {
+                    name: "小雪",
+                    date: "11月22日至23日",
+                    description: "開始降雪，但雪量不大。",
+                    features: ["開始降雪", "氣溫顯著下降", "風寒漸重", "河面結冰"],
+                    customs: ["煮羊肉", "喝薑湯", "進補", "冬藏"],
+                    healthTips: "注意保暖，預防感冒，適當進補"
+                },
+                {
+                    name: "大雪",
+                    date: "12月7日至8日",
+                    description: "降雪量增多，天氣嚴寒。",
+                    features: ["降雪增多", "天寒地凍", "嚴寒至", "積雪成堆"],
+                    customs: ["賞雪", "吃羊肉", "泡腳", "溫補"],
+                    healthTips: "防寒保暖，適度運動，注意防滑"
+                },
+                {
+                    name: "冬至",
+                    date: "12月21日至23日",
+                    description: "北半球一年中白晝最短的一天。",
+                    features: ["白晝最短", "黑夜最長", "寒氣至", "農閒時節"],
+                    customs: ["吃湯圓", "祭祖", "團圓", "賞梅"],
+                    healthTips: "養精蓄銳，注意保暖，調理脾胃"
+                },
+                {
+                    name: "小寒",
+                    date: "1月5日至7日",
+                    description: "寒氣漸重，天氣寒冷。",
+                    features: ["天寒地凍", "寒氣襲人", "冰雪天氣", "北風呼嘯"],
+                    customs: ["喝薑湯", "吃餃子", "進補", "泡腳"],
+                    healthTips: "防寒保暖，預防凍傷，適當運動"
+                },
+                {
+                    name: "大寒",
+                    date: "1月20日至21日",
+                    description: "一年中最冷的節氣。",
+                    features: ["最低溫", "寒風刺骨", "冰天雪地", "萬物蟄伏"],
+                    customs: ["吃餃子", "熬湯", "溫補", "賞梅"],
+                    healthTips: "注意防寒，保暖防凍，養精蓄銳"
+                }
+            ]
+        };
+
+        function createSeasonSection(season, terms) {
+            const seasonNames = {
+                spring: '春季',
+                summer: '夏季',
+                autumn: '秋季',
+                winter: '冬季'
+            };
+
+            const section = document.createElement('div');
+            section.className = 'season-container';
+            section.id = season;
+
+            const title = document.createElement('h2');
+            title.className = 'season-title';
+            title.textContent = seasonNames[season];
+            section.appendChild(title);
+
+            const grid = document.createElement('div');
+            grid.className = 'solar-terms-grid';
+
+            terms.forEach(term => {
+                const card = document.createElement('div');
+                card.className = `term-card ${season}`;
+                card.onclick = () => showTermDetails(term, season);
+                
+                card.innerHTML = `
+                    <h3>${term.name}</h3>
+                    <div class="term-info">
+                        <p>${term.date}</p>
+                        <p>${term.description}</p>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+
+            section.appendChild(grid);
+            return section;
+        }
+
+        function createSeasonIndicator() {
+            const indicator = document.getElementById('seasonIndicator');
+            const seasons = ['spring', 'summer', 'autumn', 'winter'];
+            const seasonNames = {
+                spring: '春',
+                summer: '夏',
+                autumn: '秋',
+                winter: '冬'
+            };
+
+            seasons.forEach(season => {
+                const dot = document.createElement('div');
+                dot.className = 'season-dot';
+                dot.title = seasonNames[season];
+                dot.onclick = () => document.getElementById(season).scrollIntoView({ behavior: 'smooth' });
+                indicator.appendChild(dot);
+            });
+
+            // 添加滾動監聽
+            window.addEventListener('scroll', updateSeasonIndicator);
+        }
+
+        function updateSeasonIndicator() {
+            const seasons = ['spring', 'summer', 'autumn', 'winter'];
+            const dots = document.getElementsByClassName('season-dot');
+            
+            seasons.forEach((season, index) => {
+                const section = document.getElementById(season);
+                const rect = section.getBoundingClientRect();
+                
+                if (rect.top < window.innerHeight/2 && rect.bottom > window.innerHeight/2) {
+                    dots[index].classList.add('active');
+                } else {
+                    dots[index].classList.remove('active');
+                }
+            });
+        }
+
+        function showTermDetails(term, season) {
+            const modal = document.getElementById('termModal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <h2 style="color: #1a4d2e; margin-bottom: 20px;">${term.name}</h2>
+                
+                <div class="info-section">
+                    <h3>時間與概述</h3>
+                    <p>${term.date}</p>
+                    <p>${term.description}</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>自然特徵</h3>
+                    <ul class="info-list">
+                        ${term.features.map(feature => `<li>${feature}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h3>民俗活動</h3>
+                    <ul class="info-list">
+                        ${term.customs.map(custom => `<li>${custom}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h3>養生建議</h3>
+                    <p>${term.healthTips}</p>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('termModal').style.display = 'none';
+        }
+
+        // 初始化頁面
+        function initializePage() {
+            const container = document.getElementById('mainContainer');
+            
+            // 創建各季節區塊
+            for (const [season, terms] of Object.entries(solarTerms)) {
+                container.appendChild(createSeasonSection(season, terms));
+            }
+            
+            // 創建季節指示器
+            createSeasonIndicator();
+
+            // 點擊模態框外部關閉
+            window.onclick = function(event) {
+                const modal = document.getElementById('termModal');
+                if (event.target == modal) {
+                    closeModal();
+                }
+            }
+        }
+
+        // 頁面載入完成後初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

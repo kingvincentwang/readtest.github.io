@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>24節氣練習題</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background: #f5f5f5;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #1a4d2e, #2d6a4f);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .quiz-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #1a4d2e;
+        }
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+        .option {
+            padding: 15px;
+            background: #f8f8f8;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .option:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+        .option.selected {
+            background: #e0f0e3;
+            border-color: #1a4d2e;
+        }
+        .option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        .option.wrong {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+        }
+        .feedback.wrong {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #1a4d2e;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #2d6a4f;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .progress {
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+        }
+        .score-display {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>24節氣練習題</h1>
+            <p>測試你對24節氣的理解</p>
+        </header>
+        
+        <div class="progress">
+            <span id="currentQuestion">題目 1</span> / <span id="totalQuestions">10</span>
+        </div>
+        
+        <div class="quiz-container" id="quizContainer">
+            <!-- 題目將由JavaScript動態生成 -->
+        </div>
+        
+        <div class="controls">
+            <button id="prevBtn" disabled>上一題</button>
+            <button id="nextBtn">下一題</button>
+        </div>
+        
+        <div class="score-display" id="scoreDisplay" style="display: none;">
+            <!-- 成績將在測驗結束後顯示 -->
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "哪個節氣標誌著春天的開始？",
+                options: ["立春", "雨水", "驚蟄", "春分"],
+                correct: 0,
+                explanation: "立春是二十四節氣中的第一個節氣，標誌著春天的開始。"
+            },
+            {
+                question: "夏至時有什麼特別的天文現象？",
+                options: ["日夜等長", "白晝最短", "白晝最長", "夜晚最長"],
+                correct: 2,
+                explanation: "夏至這天是北半球一年中白晝最長的一天。"
+            },
+            {
+                question: "哪個節氣與清明節相對應？",
+                options: ["春分", "清明", "穀雨", "立夏"],
+                correct: 1,
+                explanation: "清明是二十四節氣之一，也是中國傳統節日清明節。"
+            },
+            {
+                question: "「小滿」代表什麼意思？",
+                options: ["天氣炎熱", "穀物將成熟", "雨水充沛", "寒氣漸強"],
+                correct: 1,
+                explanation: "小滿表示穀物已經開始結實，但還未完全成熟的階段。"
+            },
+            {
+                question: "在「白露」節氣，為什麼會有露水？",
+                options: ["溫度驟降", "早晚溫差大", "空氣濕度大", "以上皆是"],
+                correct: 3,
+                explanation: "白露時節，由於早晚溫差大，空氣濕度高，容易形成露水。"
+            },
+            {
+                question: "「霜降」時應該注意什麼養生事項？",
+                options: ["防暑", "預防感冒", "防曬", "避免運動"],
+                correct: 1,
+                explanation: "霜降時節溫度開始明顯下降，應該注意預防感冒，及時添加衣物。"
+            },
+            {
+                question: "「大雪」節氣的主要特徵是什麼？",
+                options: ["開始下雪", "降雪量大", "氣溫最低", "風力最大"],
+                correct: 1,
+                explanation: "大雪節氣時降雪量明顯增多，天氣寒冷。"
+            },
+            {
+                question: "哪個節氣被稱為「一年中最冷的節氣」？",
+                options: ["小寒", "大寒", "冬至", "立冬"],
+                correct: 1,
+                explanation: "大寒通常是一年中最冷的節氣，此時寒潮頻繁，天寒地凍。"
+            },
+            {
+                question: "「芒種」時節農民主要進行什麼活動？",
+                options: ["收割", "播種", "祭祀", "曬穀"],
+                correct: 1,
+                explanation: "芒種時節適合播種稻子等農作物，是重要的農事時節。"
+            },
+            {
+                question: "「處暑」節氣代表什麼？",
+                options: ["開始炎熱", "最熱時期", "暑氣漸消", "秋天結束"],
+                correct: 2,
+                explanation: "處暑標誌著暑熱開始消退，天氣漸漸轉涼。"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answeredQuestions = new Set();
+
+        function displayQuestion(index) {
+            const question = questions[index];
+            const quizContainer = document.getElementById('quizContainer');
+            
+            quizContainer.innerHTML = `
+                <div class="question">${question.question}</div>
+                <div class="options">
+                    ${question.options.map((option, i) => `
+                        <div class="option" onclick="selectOption(${i})">${option}</div>
+                    `).join('')}
+                </div>
+                <div class="feedback"></div>
+            `;
+
+            updateProgress();
+            updateButtons();
+        }
+
+        function selectOption(optionIndex) {
+            if (answeredQuestions.has(currentQuestionIndex)) return;
+
+            const options = document.querySelectorAll('.option');
+            const feedback = document.querySelector('.feedback');
+            const currentQuestion = questions[currentQuestionIndex];
+
+            options.forEach(option => option.classList.remove('selected'));
+            options[optionIndex].classList.add('selected');
+
+            if (optionIndex === currentQuestion.correct) {
+                options[optionIndex].classList.add('correct');
+                feedback.innerHTML = `正確！${currentQuestion.explanation}`;
+                feedback.className = 'feedback correct';
+                score++;
+            } else {
+                options[optionIndex].classList.add('wrong');
+                options[currentQuestion.correct].classList.add('correct');
+                feedback.innerHTML = `錯誤。正確答案是：${currentQuestion.options[currentQuestion.correct]}。${currentQuestion.explanation}`;
+                feedback.className = 'feedback wrong';
+            }
+
+            feedback.style.display = 'block';
+            answeredQuestions.add(currentQuestionIndex);
+            updateButtons();
+        }
+
+        function updateProgress() {
+            document.getElementById('currentQuestion').textContent = `題目 ${currentQuestionIndex + 1}`;
+            document.getElementById('totalQuestions').textContent = questions.length;
+        }
+
+        function updateButtons() {
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (currentQuestionIndex === questions.length - 1) {
+                nextBtn.textContent = '查看結果';
+            } else {
+                nextBtn.textContent = '下一題';
+            }
+        }
+
+        function showResult() {
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const percentage = (score / questions.length) * 100;
+            
+            let feedback;
+            if (percentage >= 90) {
+                feedback = "太棒了！你對24節氣非常了解！";
+            } else if (percentage >= 70) {
+                feedback = "做得不錯！繼續加油！";
+            } else if (percentage >= 50) {
+                feedback = "及格了！但還有進步空間。";
+            } else {
+                feedback = "需要多多學習，建議重新複習24節氣的知識。";
+            }
+
+            scoreDisplay.innerHTML = `
+                <h2>測驗完成！</h2>
+                <p>你的分數：${score} / ${questions.length} (${percentage}%)</p>
+                <p>${feedback}</p>
+                <button onclick="restartQuiz()">重新開始</button>
+            `;
+            scoreDisplay.style.display = 'block';
+            document.querySelector('.quiz-container').style.display = 'none';
+            document.querySelector('.controls').style.display = 'none';
+            document.querySelector('.progress').style.display = 'none';
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            answeredQuestions.clear();
+            document.getElementById('scoreDisplay').style.display = 'none';
+            document.querySelector('.quiz-container').style.display = 'block';
+            document.querySelector('.controls').style.display = 'flex';
+            document.querySelector('.progress').style.display = 'block';
+            displayQuestion(0);
+        }
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion(currentQuestionIndex);
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion(currentQuestionIndex);
+            } else {
+                showResult();
+            }
+        });
+
+        // 初始化顯示第一題
+        displayQuestion(0);
+    </script>
+</body>
+</html>

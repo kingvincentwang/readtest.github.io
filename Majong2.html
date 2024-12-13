@@ -647,7 +647,7 @@ function startTurnTimer() {
     timerBar.style.width = '100%';
     timerBar.style.backgroundColor = '#4CAF50';
     
-    turnTimer = setInterval(() => {
+    turnTimer = setInterval(async () => {
         remainingTime--;
         
         const percentage = (remainingTime / TURN_DURATION) * 100;
@@ -659,8 +659,17 @@ function startTurnTimer() {
         
         if (remainingTime <= 0) {
             clearInterval(turnTimer);
-            document.getElementById('timeoutSound').play().catch(e => console.log('音效播放失敗'));
-            switchPlayer();
+            try {
+                // 先停止並重置音效
+                const timeoutSound = document.getElementById('timeoutSound');
+                timeoutSound.currentTime = 0;
+                await timeoutSound.play();
+            } catch (error) {
+                console.error('播放音效失敗:', error);
+            }
+            setTimeout(() => {
+                switchPlayer();
+            }, 100); // 延遲切換玩家，確保音效有時間播放
         }
     }, 1000);
 }

@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四川麻將成語版 - 雙人對戰</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Microsoft YaHei", "微軟正黑體", sans-serif;
+    background-color: #2a5a3b;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 5px;
+}
+
+.game-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
+    gap: 5px;
+    flex: 1;
+    max-height: calc(100vh - 40px);
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.player-sidebar {
+    background-color: #357a4f;
+    border-radius: 5px;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 5px;
+    min-width: 120px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.game-container {
+    background-color: #357a4f;
+    border-radius: 5px;
+    padding: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.csv-upload-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 5px;
+    flex-wrap: wrap;
+}
+
+.start-button, 
+.upload-button, 
+.download-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    min-width: 80px;
+    text-align: center;
+    font-size: clamp(10px, 1.2vw, 14px);
+}
+
+.start-button:hover, 
+.upload-button:hover, 
+.download-button:hover {
+    background-color: #45a049;
+}
+
+.player-card {
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 5px;
+    padding: 5px;
+    width: 100%;
+    text-align: center;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.player-card.current {
+    background-color: rgba(255,255,255,0.2);
+    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+    transform: scale(1.05);
+}
+
+.player-card h2 {
+    margin-bottom: 3px;
+    font-size: clamp(14px, 1.8vw, 18px);
+}
+
+.player-score {
+    font-size: clamp(16px, 2vw, 20px);
+    font-weight: bold;
+}
+
+.info-panel {
+    color: white;
+    text-align: center;
+    font-size: clamp(10px, 1.2vw, 14px);
+    display: flex;
+    justify-content: space-around;
+    background-color: rgba(0,0,0,0.2);
+    padding: 5px;
+    border-radius: 3px;
+}
+
+.timer-container {
+    width: 100%;
+    background-color: #ddd;
+    border-radius: 3px;
+    margin-top: 3px;
+}
+
+.timer-bar {
+    height: 5px;
+    background-color: #4CAF50;
+    width: 100%;
+    transition: width 1s linear;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    gap: 2px;
+    padding: 5px;
+    background-color: #2a5a3b;
+    border-radius: 3px;
+    height: calc(100vh - 150px);
+    overflow: hidden;
+}
+
+.tile {
+    background-color: #f0e6d2;
+    border: 1px solid #8b4513;
+    border-radius: 3px;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    padding: 2px;
+    height: calc((100vh - 180px) / 10);
+    max-height: 60px;
+}
+
+.tile span {
+    font-size: clamp(8px, 1.2vw, 14px);
+    line-height: 1.1;
+    text-align: center;
+    word-break: break-all;
+    white-space: pre-wrap;
+    max-width: 100%;
+    max-height: 100%;
+    color: #2c1810;
+    font-weight: bold;
+}
+
+.tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+}
+
+.tile.selected {
+    transform: scale(1.05);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    border-color: #ffd700;
+    background-color: #f5f5dc;
+}
+
+.tile.invalid-match {
+    animation: shakeTile 0.5s;
+    background-color: #ffcccc;
+}
+
+@keyframes shakeTile {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+    20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+.attitude { background-color: #e6f3e6; }
+.method { background-color: #f3e6e6; }
+.result { background-color: #e6e6f3; }
+
+.start-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.meaning-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 10px 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    z-index: 1000;
+    text-align: center;
+    animation: fadeIn 0.3s;
+    min-width: 150px;
+    max-width: 80%;
+}
+
+.meaning-popup .idiom {
+    font-size: clamp(14px, 2.5vw, 20px);
+    margin-bottom: 8px;
+    color: #2a5a3b;
+    font-weight: bold;
+}
+
+.meaning-popup .meaning {
+    font-size: clamp(10px, 2vw, 14px);
+    line-height: 1.3;
+    color: #333;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -60%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translate(-50%, -50%); }
+    to { opacity: 0; transform: translate(-50%, -40%); }
+}
+
+@media screen and (max-width: 768px) {
+    .game-wrapper {
+        flex-direction: column;
+    }
+    
+    .player-sidebar {
+        flex-direction: row;
+        justify-content: space-around;
+    }
+    
+    .player-card {
+        flex: 1;
+        margin: 0 3px;
+    }
+    
+    .game-board {
+        height: calc(100vh - 200px);
+    }
+    
+    .tile {
+        height: calc((100vh - 230px) / 10);
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .csv-upload-section {
+        flex-direction: column;
+    }
+    
+    .start-button, 
+    .upload-button, 
+    .download-button {
+        width: 100%;
+        margin-bottom: 3px;
+    }
+    
+    .game-board {
+        height: calc(100vh - 220px);
+    }
+    
+    .tile {
+        height: calc((100vh - 250px) / 10);
+    }
+}
+    </style>
+</head>
+<body>
+    <div id="startScreen" class="start-screen">
+        <button id="startGameButton" class="start-button">開始遊戲</button>
+    </div>
+
+    <center><h1 style="color: white;">四川麻將成語版 - 雙人對戰</h1></center>
+    
+    <div class="game-wrapper">
+        <div class="player-sidebar">
+            <div id="player1" class="player-card current">
+                <h2>玩家1</h2>
+                <div class="player-score">分數：<span id="player1Score">0</span></div>
+            </div>
+            <div id="player2" class="player-card">
+                <h2>玩家2</h2>
+                <div class="player-score">分數：<span id="player2Score">0</span></div>
+            </div>
+        </div>
+
+        <div class="game-container">
+            <div class="csv-upload-section">
+                <input type="file" id="csvFileInput" accept=".csv" style="display:none;">
+                <button id="uploadCSVButton" class="upload-button">上傳成語 CSV</button>
+                <a id="downloadTemplateButton" 
+                   href="data:text/csv;charset=utf-8,成語,解釋,分類%0A學而不厭,學習不知疲倦,attitude%0A溫故知新,複習學過的知識,method%0A突飛猛進,進步特別快,result" 
+                   download="idioms_template.csv" 
+                   class="download-button">下載 CSV 範本</a>
+            </div>
+
+            <div class="info-panel">
+                <div>剩餘牌數: <span id="remainingCount">108</span></div>
+                <div>當前玩家: <span id="currentPlayer">玩家1</span></div>
+            </div>
+            
+            <div class="timer-container">
+                <div id="timerBar" class="timer-bar"></div>
+            </div>
+
+            <div class="game-board" id="gameBoard"></div>
+        </div>
+    </div>
+
+    <audio id="clickSound" src="https://taira-komori.jpn.org/sound_os2/game01/select01.mp3"></audio>
+    <audio id="matchSound" src="https://taira-komori.jpn.org/sound_os2/game01/powerup10.mp3"></audio>
+    <audio id="failSound" src="https://taira-komori.jpn.org/sound_os2/game01/blip01.mp3"></audio>
+    <audio id="timeoutSound" src="https://taira-komori.jpn.org/sound_os2/game01/blip01.mp3"></audio>
+
+<script>
+// 遊戲全域變數
+let gameBoard = [];
+let selectedTiles = [];
+let currentPlayer = 1;
+const playerScores = [0, 0];
+let turnTimer = null;
+const TURN_DURATION = 15; // 每回合15秒
+let remainingTime = TURN_DURATION;
+let isTurnActive = false;
+
+const BOARD_SIZE = {
+    rows: 10,
+    cols: 11
+};
+
+function stopTurnTimer() {
+    if (turnTimer) {
+        clearInterval(turnTimer);
+        turnTimer = null;
+    }
+    isTurnActive = false;
+    const timerBar = document.getElementById('timerBar');
+    timerBar.style.width = '100%';
+    timerBar.style.backgroundColor = '#4CAF50';
+}
+// CSV 解析函數
+function parseCSV(csvText) {
+    csvText = csvText.replace(/^\uFEFF/, '');
+    
+    const lines = csvText.trim().split(/\r?\n/);
+    const headers = lines[0].split(',');
+    
+    const idioms = {
+        attitude: { symbols: [] },
+        method: { symbols: [] },
+        result: { symbols: [] }
+    };
+
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
+            .map(value => value.replace(/^"(.+)"$/, '$1').trim());
+        
+        if (values.length < 3) continue;
+        
+        const idiomObj = {
+            text: values[0],
+            meaning: values[1],
+            category: values[2].toLowerCase() || 'method'
+        };
+
+        switch(idiomObj.category) {
+            case 'attitude':
+                idioms.attitude.symbols.push(idiomObj);
+                break;
+            case 'method':
+                idioms.method.symbols.push(idiomObj);
+                break;
+            case 'result':
+                idioms.result.symbols.push(idiomObj);
+                break;
+            default:
+                idioms.method.symbols.push(idiomObj);
+        }
+    }
+
+    return idioms;
+}
+
+// 從 CSV 文件載入成語
+async function loadIdiomsFromCSV(csvPath) {
+    try {
+        const response = await fetch(csvPath);
+        const csvText = await response.text();
+        return parseCSV(csvText);
+    } catch (error) {
+        console.error('載入 CSV 失敗:', error);
+        
+        // 返回預設成語
+        return {
+            attitude: {
+                symbols: [
+                    {text: '學而\n不厭', meaning: '學習不知疲倦，永不厭煩', category: 'attitude'},
+                    {text: '溫故\n知新', meaning: '複習學過的知識', category: 'attitude'}
+                ]
+            },
+            method: {
+                symbols: [
+                    {text: '舉一\n反三', meaning: '從一件事情類推到其他相關的事', category: 'method'},
+                    {text: '觸類\n旁通', meaning: '從一事物的特點類推到別的相關事物', category: 'method'}
+                ]
+            },
+            result: {
+                symbols: [
+                    {text: '突飛\n猛進', meaning: '進步特別快', category: 'result'},
+                    {text: '青出\n於藍', meaning: '學生的成就超過老師', category: 'result'}
+                ]
+            }
+        };
+    }
+}
+
+// 洗牌函數
+function shuffleArray(array) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+}
+
+// 生成牌組
+async function generateTiles(idiomConfig) {
+    let tiles = [];
+    Object.values(idiomConfig).forEach(type => {
+        type.symbols.forEach(symbol => {
+            // 每個成語重複4次
+            for (let i = 0; i < 4; i++) {
+                tiles.push({
+                    symbol: symbol.text,
+                    meaning: symbol.meaning,
+                    class: symbol.category || 'method'
+                });
+            }
+        });
+    });
+    return shuffleArray(tiles);
+}
+
+// 顯示成語意義的彈出視窗
+function showMeaning(idiom, meaning) {
+    const popup = document.createElement('div');
+    popup.className = 'meaning-popup';
+    popup.innerHTML = `
+        <div class="idiom">${idiom.replace('\n', '')}</div>
+        <div class="meaning">${meaning}</div>
+    `;
+    document.body.appendChild(popup);
+    
+    setTimeout(() => {
+        popup.style.animation = 'fadeOut 0.3s forwards';
+        popup.addEventListener('animationend', () => {
+            document.body.removeChild(popup);
+        });
+    }, 2000);
+}
+
+// 創建單個牌的函數
+function createTile(tileInfo, row, col) {
+    const tile = document.createElement('div');
+    tile.className = `tile ${tileInfo.class}`;
+    tile.dataset.row = row;
+    tile.dataset.col = col;
+    tile.dataset.meaning = tileInfo.meaning;
+    
+    const span = document.createElement('span');
+    span.textContent = tileInfo.symbol;
+    tile.appendChild(span);
+    
+    tile.onclick = () => selectTile(tile);
+    return tile;
+}
+
+// 初始化遊戲棋盤
+function initializeBoard() {
+    gameBoard = Array(BOARD_SIZE.rows).fill().map(() => 
+        Array(BOARD_SIZE.cols).fill(null));
+}
+
+// 獲取指定位置的牌
+function getTileAt(row, col) {
+    if (row < 0 || row >= BOARD_SIZE.rows || col < 0 || col >= BOARD_SIZE.cols) {
+        return null;
+    }
+    return gameBoard[row][col];
+}
+
+// 檢查牌是否可見
+function isVisible(tile) {
+    return tile && tile.style.visibility !== 'hidden';
+}
+
+// 檢查是否有直線路徑
+function hasDirectPath(start, end) {
+    if (start.row === end.row) {
+        const minCol = Math.min(start.col, end.col);
+        const maxCol = Math.max(start.col, end.col);
+        for (let col = minCol + 1; col < maxCol; col++) {
+            if (isVisible(getTileAt(start.row, col))) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    if (start.col === end.col) {
+        const minRow = Math.min(start.row, end.row);
+        const maxRow = Math.max(start.row, end.row);
+        for (let row = minRow + 1; row < maxRow; row++) {
+            if (isVisible(getTileAt(row, start.col))) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    return false;
+}
+
+// 檢查一個轉角的路徑
+function hasOneCornerPath(start, end) {
+    const corner1 = { row: start.row, col: end.col };
+    const corner2 = { row: end.row, col: start.col };
+    
+    if (!isVisible(getTileAt(corner1.row, corner1.col))) {
+        if (hasDirectPath(start, corner1) && hasDirectPath(corner1, end)) {
+            return corner1;
+        }
+    }
+    
+    if (!isVisible(getTileAt(corner2.row, corner2.col))) {
+        if (hasDirectPath(start, corner2) && hasDirectPath(corner2, end)) {
+            return corner2;
+        }
+    }
+    
+    return null;
+}
+
+// 檢查兩個轉角的路徑
+function hasTwoCornerPath(start, end) {
+    for (let row = -1; row <= BOARD_SIZE.rows; row++) {
+        for (let col = -1; col <= BOARD_SIZE.cols; col++) {
+            if ((row === start.row && col === start.col) || 
+                (row === end.row && col === end.col)) continue;
+                
+            const corner = { row, col };
+            
+            const firstCorner = hasOneCornerPath(start, corner);
+            if (!firstCorner) continue;
+            
+            const secondCorner = hasOneCornerPath(corner, end);
+            if (!secondCorner) continue;
+            
+            return {
+                corner1: firstCorner,
+                middle: corner,
+                corner2: secondCorner
+            };
+        }
+    }
+    
+    return null;
+}
+
+// 尋找兩個牌之間的路徑
+function findPath(tile1, tile2) {
+    const start = {
+        row: parseInt(tile1.dataset.row),
+        col: parseInt(tile1.dataset.col)
+    };
+    
+    const end = {
+        row: parseInt(tile2.dataset.row),
+        col: parseInt(tile2.dataset.col)
+    };
+    
+    if (hasDirectPath(start, end)) {
+        return { type: 'direct' };
+    }
+    
+    const oneCorner = hasOneCornerPath(start, end);
+    if (oneCorner) {
+        return { type: 'oneCorner', corner: oneCorner };
+    }
+    
+    const twoCorners = hasTwoCornerPath(start, end);
+    if (twoCorners) {
+        return { type: 'twoCorners', ...twoCorners };
+    }
+    
+    return null;
+}
+
+// 開始回合計時
+function startTurnTimer() {
+    if (turnTimer) {
+        clearInterval(turnTimer);
+    }
+    
+    isTurnActive = true;
+    remainingTime = TURN_DURATION;
+    const timerBar = document.getElementById('timerBar');
+    timerBar.style.width = '100%';
+    timerBar.style.backgroundColor = '#4CAF50';
+    
+    turnTimer = setInterval(() => {
+        remainingTime--;
+        
+        const percentage = (remainingTime / TURN_DURATION) * 100;
+        timerBar.style.width = `${percentage}%`;
+        
+        if (remainingTime <= 5) {
+            timerBar.style.backgroundColor = '#FF0000';
+        }
+        
+        if (remainingTime <= 0) {
+            clearInterval(turnTimer);
+            document.getElementById('timeoutSound').play().catch(e => console.log('音效播放失敗'));
+            switchPlayer();
+        }
+    }, 1000);
+}
+
+// 切換玩家
+function switchPlayer() {
+    if (turnTimer) {
+        clearInterval(turnTimer);
+    }
+    
+    currentPlayer = currentPlayer === 1 ? 2 : 1;
+    document.getElementById('player1').classList.toggle('current');
+    document.getElementById('player2').classList.toggle('current');
+    document.getElementById('currentPlayer').textContent = `玩家${currentPlayer}`;
+    
+    selectedTiles.forEach(tile => tile.classList.remove('selected'));
+    selectedTiles = [];
+    isTurnActive = false;
+    
+    startTurnTimer();
+}
+
+// 選擇牌
+function selectTile(tile) {
+    if (isTurnActive && selectedTiles.length < 2 && !tile.classList.contains('selected')) {
+        document.getElementById('clickSound').play().catch(e => console.log('音效播放失敗'));
+        tile.classList.add('selected');
+        selectedTiles.push(tile);
+        
+        if (selectedTiles.length === 2) {
+            checkMatch();
+        }
+    }
+}
+
+// 檢查配對
+function checkMatch() {
+    const [tile1, tile2] = selectedTiles;
+    
+    if (tile1.querySelector('span').textContent === tile2.querySelector('span').textContent) {
+        const path = findPath(tile1, tile2);
+        if (path) {
+            document.getElementById('matchSound').play().catch(e => console.log('音效播放失敗'));
+            setTimeout(() => {
+                showMeaning(tile1.querySelector('span').textContent, tile1.dataset.meaning);
+                
+                tile1.style.visibility = 'hidden';
+                tile2.style.visibility = 'hidden';
+                
+                playerScores[currentPlayer - 1] += 10;
+                updateUI();
+                
+                switchPlayer();
+                
+                checkGameEnd();
+            }, 300);
+        } else {
+            document.getElementById('failSound').play().catch(e => console.log('音效播放失敗'));
+            selectedTiles.forEach(tile => {
+                tile.classList.add('invalid-match');
+                setTimeout(() => tile.classList.remove('invalid-match'), 500);
+            });
+            switchPlayer();
+        }
+    } else {
+        document.getElementById('failSound').play().catch(e => console.log('音效播放失敗'));
+        selectedTiles.forEach(tile => {
+            tile.classList.add('invalid-match');
+            setTimeout(() => tile.classList.remove('invalid-match'), 500);
+        });
+        switchPlayer();
+    }
+    
+    setTimeout(() => {
+        selectedTiles.forEach(tile => tile.classList.remove('selected'));
+        selectedTiles = [];
+    }, 500);
+}
+
+// 開始新遊戲
+async function startNewGame(idiomConfig = null) {
+    stopTurnTimer();
+	// 如果沒有傳入配置，則從 CSV 載入
+    if (!idiomConfig) {
+        idiomConfig = await loadIdiomsFromCSV('idioms.csv');
+    }
+    
+    initializeBoard();
+    selectedTiles = [];
+    playerScores[0] = 0;
+    playerScores[1] = 0;
+    currentPlayer = 1;
+    
+    const board = document.getElementById('gameBoard');
+    board.innerHTML = '';
+    
+    const tiles = await generateTiles(idiomConfig);
+    
+    for (let i = 0; i < tiles.length; i++) {
+        const row = Math.floor(i / BOARD_SIZE.cols);
+        const col = i % BOARD_SIZE.cols;
+        
+        if (row < BOARD_SIZE.rows) {
+            const tile = createTile(tiles[i], row, col);
+            gameBoard[row][col] = tile;
+            board.appendChild(tile);
+        }
+    }
+    
+    updateUI();
+    document.getElementById('player1').classList.add('current');
+    document.getElementById('player2').classList.remove('current');
+    document.getElementById('currentPlayer').textContent = '玩家1';
+    
+    document.getElementById('startScreen').style.display = 'flex';
+}
+
+// 更新UI
+function updateUI() {
+    document.getElementById('player1Score').textContent = playerScores[0];
+    document.getElementById('player2Score').textContent = playerScores[1];
+    
+    const remainingTiles = document.querySelectorAll('.tile:not([style*="visibility: hidden"])').length;
+    document.getElementById('remainingCount').textContent = remainingTiles;
+}
+
+// 檢查遊戲是否結束
+function checkGameEnd() {
+    const visibleTiles = document.querySelectorAll('.tile:not([style*="visibility: hidden"])');
+    if (visibleTiles.length === 0) {
+        setTimeout(() => {
+            const winner = playerScores[0] > playerScores[1] ? '玩家1' : 
+                           playerScores[0] < playerScores[1] ? '玩家2' : '平局';
+            alert(`遊戲結束！\n${winner}勝利！\n玩家1得分：${playerScores[0]}\n玩家2得分：${playerScores[1]}`);
+            startNewGame();
+        }, 500);
+    }
+}
+
+// 初始化遊戲
+function initGame() {
+    document.addEventListener('DOMContentLoaded', () => {
+        const csvFileInput = document.getElementById('csvFileInput');
+        const uploadCSVButton = document.getElementById('uploadCSVButton');
+        const startGameButton = document.getElementById('startGameButton');
+        const startScreen = document.getElementById('startScreen');
+
+        let currentIdiomConfig = null;
+
+        // CSV 上傳功能
+        uploadCSVButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            csvFileInput.click();
+        });
+
+        csvFileInput.addEventListener('change', function(event) {
+			const file = event.target.files[0];
+			if (file) {
+				stopTurnTimer(); // 停止計時器
+				const reader = new FileReader();
+				
+				reader.onload = function(e) {
+					try {
+						const csvText = e.target.result;
+						currentIdiomConfig = parseCSV(csvText);
+						
+						startNewGame(currentIdiomConfig).then(() => {
+							alert('成語已成功更新！');
+						});
+					} catch (error) {
+						console.error('CSV 解析錯誤:', error);
+						alert('CSV 檔案格式錯誤，請檢查');
+					}
+				};
+
+				reader.onerror = function(error) {
+					console.error('文件讀取錯誤:', error);
+					alert('文件讀取失敗');
+				};
+
+				reader.readAsText(file, 'UTF-8');
+			}
+		});
+
+        // 開始遊戲按鈕
+        startGameButton.addEventListener('click', async (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			
+			// 如果沒有上傳 CSV，使用預設成語
+			if (!currentIdiomConfig) {
+				currentIdiomConfig = await loadIdiomsFromCSV('idioms.csv');
+			}
+			
+			startScreen.style.display = 'none';
+			startTurnTimer(); // 在這裡開始計時
+			isTurnActive = true; // 確保遊戲狀態為活躍
+		});
+
+        // 初次載入遊戲
+        startNewGame();
+    });
+}
+
+// 呼叫初始化函數
+initGame();
+</script>
+</body>
+</html>

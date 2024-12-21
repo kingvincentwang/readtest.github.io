@@ -804,7 +804,7 @@
 				const team = currentState.currentTeam;
 				
 				if (isCorrect) {
-					currentState.scores[team] += 25;
+					currentState.scores[team] += 10;
 					messageEl.textContent = `答對了！${team}組得10分`;
 					playSound('correctSound');
 				} else {

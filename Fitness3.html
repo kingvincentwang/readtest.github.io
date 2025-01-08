@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>學生體能測驗記錄系統</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .title-section {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+        .title-input {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 0 auto;
+            display: block;
+        }
+        .title-input:focus {
+            outline: none;
+            border-color: #2196F3;
+            box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .import-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .import-box {
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-weight: bold;
+        }
+        .single-input {
+            width: calc(100% - 100px);
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+        .bulk-input {
+            width: 100%;
+            height: 100px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .add-btn { background-color: #4CAF50; }
+        .import-btn { background-color: #2196F3; width: 100%; }
+        .generate-btn { background-color: #673AB7; }
+        .export-btn { background-color: #9C27B0; }
+        .clear-all-btn { background-color: #E91E63; }
+        .clear-btn { background-color: #ff9800; }
+        .record-btn { background-color: #795548; }
+        .stop-btn { background-color: #f44336; }
+        
+        .student-list {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .remove-btn {
+            color: #f44336;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: bold;
+        }
+        .main-timer-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .timer {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .start-btn { background-color: #4CAF50; }
+        .lap-records {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .lap-record {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .student-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .rank-input {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .fitness-records {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 4px;
+        }
+        .fitness-record {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        .fitness-label {
+            width: 120px;
+            font-weight: bold;
+            color: #333;
+        }
+        .fitness-input {
+            width: 100px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .fitness-unit {
+            color: #666;
+            width: 50px;
+        }
+        .section-title {
+            margin: 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #eee;
+            color: #333;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            margin-top: 40px;
+            background-color: #00BFFF;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .rank-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .time-display {
+            color: #2196F3;
+            font-weight: bold;
+            min-width: 100px;
+        }
+		#load-file {
+			padding: 8px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			background-color: white;
+		}
+
+		#load-file::-webkit-file-upload-button {
+			padding: 8px 15px;
+			border: none;
+			border-radius: 4px;
+			background-color: #009688;
+			color: white;
+			cursor: pointer;
+			margin-right: 10px;
+		}
+
+		#load-file::-webkit-file-upload-button:hover {
+			opacity: 0.9;
+		}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-section">
+            <input type="text" 
+                   class="title-input" 
+                   value="學生體適能測驗記錄系統"
+                   placeholder="請輸入標題">
+        </div>
+        
+        <div class="section">
+            <h2>學生資料匯入</h2>
+            <div class="import-methods">
+                <div class="import-box">
+                    <div class="input-group">
+                        <label class="input-label">單筆匯入</label>
+                        <div style="display: flex;">
+                            <input type="text" class="single-input" placeholder="請輸入學生姓名">
+                            <button class="btn add-btn">新增</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="import-box">
+                    <div class="input-group">
+                        <label class="input-label">批次匯入（每行一個名字）</label>
+                        <textarea class="bulk-input" placeholder="張小明&#10;李小華&#10;王小美"></textarea>
+                        <button class="btn import-btn">匯入名單</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="student-list">
+                <div style="margin-bottom: 10px; font-weight: bold;">已加入的學生：</div>
+                <div id="student-list-content"></div>
+            </div>
+
+            <div class="button-group">
+				<button class="btn generate-btn" style="flex: 1;">生成記錄表</button>
+				<button class="btn export-btn" style="flex: 1;">匯出成績</button>
+				<button class="btn save-file-btn" style="flex: 1; background-color: #009688;">儲存檔案</button>
+			</div>
+        </div>
+		<div class="import-box" style="margin-top: 15px;">
+			<div class="input-group">
+				<label class="input-label">匯入已儲存的資料檔</label>
+				<div style="display: flex; gap: 10px;">
+					<input type="file" id="load-file" accept=".json" style="flex: 1;">
+					<button class="btn" style="background-color: #009688;" onclick="loadFromFile()">讀取檔案</button>
+				</div>
+			</div>
+		</div>
+        <div class="section" id="timer-section" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0;">800公尺計時</h2>
+                <button class="btn clear-all-btn">清除所有記錄</button>
+            </div>
+            
+            <div class="main-timer-card">
+                <div class="timer">00:00.00</div>
+                <div class="controls">
+                    <button class="btn start-btn">開始</button>
+                    <button class="btn stop-btn">停止</button>
+                    <button class="btn record-btn">記錄</button>
+                </div>
+                <div class="lap-records">
+                    <div style="margin-bottom: 10px; font-weight: bold;">計時記錄：</div>
+                    <div id="lap-records-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="students-container">
+            <!-- 學生記錄卡片會在這裡生成 -->
+        </div>
+        
+        <div class="footer">
+            設計者：Vincent Wang
+        </div>
+    </div>
+
+    <script>
+// 全域變數
+let studentsList = [];
+let students = [];
+let mainTimer = {
+    time: 0,
+    running: false,
+    interval: null,
+    records: []
+};
+
+// 全域函數定義
+function updateStudentList() {
+    const list = document.getElementById('student-list-content');
+    if (!list) return;
+    
+    if (studentsList.length === 0) {
+        list.innerHTML = '<div style="color: #666;">尚未加入任何學生</div>';
+        return;
+    }
+    
+    list.innerHTML = studentsList.map((name, index) => `
+        <div class="student-item">
+            <span>${name}</span>
+            <button class="remove-btn" onclick="removeStudent(${index})">✕</button>
+        </div>
+    `).join('');
+}
+
+function updateLapRecords() {
+    const recordsContainer = document.getElementById('lap-records-content');
+    if (recordsContainer) {
+        recordsContainer.innerHTML = mainTimer.records.map((time, index) => `
+            <div class="lap-record">
+                <span>計時 ${index + 1}</span>
+                <span>${formatTime(time)}</span>
+            </div>
+        `).join('');
+    }
+}
+
+// 格式化時間
+function formatTime(ms) {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    const centiseconds = Math.floor((ms % 1000) / 10);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
+}
+
+// Student 類別定義
+class Student {
+    constructor(name) {
+        this.name = name;
+        this.rank = '';
+        this.fitnessRecords = {
+            jumpingDistance: '',
+            sitAndReach: '',
+            sitUps: '',
+            shuttleRun: ''
+        };
+    }
+
+    createCard() {
+        const card = document.createElement('div');
+        card.className = 'student-card';
+        card.innerHTML = `
+            <h3>${this.name}</h3>
+            <div class="fitness-records">
+                <div class="fitness-record">
+                    <label class="fitness-label">800公尺名次</label>
+                    <div class="rank-group">
+                        <input type="number" class="rank-input" min="1" 
+                            value="${this.rank}" 
+                            onchange="updateStudentRank('${this.name}', this.value)">
+                        <span class="time-display" id="time-${this.name}">
+                            ${this.rank && mainTimer.records[parseInt(this.rank) - 1] ? 
+                                formatTime(mainTimer.records[parseInt(this.rank) - 1]) : '--:--:--'}
+                        </span>
+                    </div>
+                </div>
+                <div class="fitness-record">
+                    <label class="fitness-label">立定跳遠</label>
+                    <input type="number" step="0.1" class="fitness-input jumping-distance"
+                        value="${this.fitnessRecords.jumpingDistance}"
+                        onchange="updateFitnessRecord('${this.name}', 'jumpingDistance', this.value)">
+                    <span class="fitness-unit">公分</span>
+                </div>
+                <div class="fitness-record">
+                    <label class="fitness-label">坐姿體前彎</label>
+                    <input type="number" step="0.1" class="fitness-input sit-and-reach"
+                        value="${this.fitnessRecords.sitAndReach}"
+                        onchange="updateFitnessRecord('${this.name}', 'sitAndReach', this.value)">
+                    <span class="fitness-unit">公分</span>
+                </div>
+                <div class="fitness-record">
+                    <label class="fitness-label">捲腹</label>
+                    <input type="number" class="fitness-input sit-ups"
+                        value="${this.fitnessRecords.sitUps}"
+                        onchange="updateFitnessRecord('${this.name}', 'sitUps', this.value)">
+                    <span class="fitness-unit">次</span>
+                </div>
+                <div class="fitness-record">
+                    <label class="fitness-label">折返跑</label>
+                    <input type="number" class="fitness-input shuttle-run"
+                        value="${this.fitnessRecords.shuttleRun}"
+                        onchange="updateFitnessRecord('${this.name}', 'shuttleRun', this.value)">
+                    <span class="fitness-unit">次</span>
+                </div>
+            </div>
+        `;
+        return card;
+    }
+}
+
+// 更新學生排名
+function updateStudentRank(name, rank) {
+    const student = students.find(s => s.name === name);
+    if (student) {
+        student.rank = rank;
+        const timeDisplay = document.getElementById(`time-${name}`);
+        if (timeDisplay) {
+            const rankNum = parseInt(rank);
+            if (!isNaN(rankNum) && mainTimer.records[rankNum - 1]) {
+                timeDisplay.textContent = formatTime(mainTimer.records[rankNum - 1]);
+            } else {
+                timeDisplay.textContent = '--:--:--';
+            }
+        }
+    }
+}
+
+// 更新體能記錄
+function updateFitnessRecord(name, recordType, value) {
+    const student = students.find(s => s.name === name);
+    if (student) {
+        student.fitnessRecords[recordType] = value;
+    }
+}
+
+// 移除學生
+function removeStudent(index) {
+    if (index >= 0 && index < studentsList.length) {
+        studentsList.splice(index, 1);
+        updateStudentList();
+    }
+}
+
+// 儲存檔案
+function saveToFile() {
+    const data = {
+        studentsList: studentsList,
+        students: students,
+        timerRecords: mainTimer.records,
+        title: document.querySelector('.title-input')?.value
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    
+    link.href = url;
+    link.download = `學生體能測驗記錄_${timestamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// 從檔案讀取
+window.loadFromFile = function() {
+    const fileInput = document.getElementById('load-file');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('請選擇檔案！');
+        return;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            // 更新標題
+            if (data.title) {
+                const titleInput = document.querySelector('.title-input');
+                if (titleInput) {
+                    titleInput.value = data.title;
+                    document.title = data.title;
+                }
+            }
+            
+            // 更新學生名單
+            studentsList = data.studentsList || [];
+            updateStudentList();
+            
+            // 更新計時記錄
+            mainTimer.records = data.timerRecords || [];
+            updateLapRecords();
+            
+            // 更新學生資料和成績
+            if (data.students && data.students.length > 0) {
+                students = data.students.map(savedStudent => {
+                    const student = new Student(savedStudent.name);
+                    student.rank = savedStudent.rank;
+                    student.fitnessRecords = savedStudent.fitnessRecords;
+                    return student;
+                });
+                
+                // 顯示計時區域
+                const timerSection = document.getElementById('timer-section');
+                if (timerSection) {
+                    timerSection.style.display = 'block';
+                }
+                
+                // 重新生成學生卡片
+                const container = document.getElementById('students-container');
+                if (container) {
+                    container.innerHTML = '';
+                    students.forEach(student => {
+                        const card = student.createCard();
+                        container.appendChild(card);
+                    });
+                }
+            }
+            
+            alert('資料載入成功！');
+            fileInput.value = ''; // 清空檔案選擇
+            
+        } catch (error) {
+            console.error('Error loading file:', error);
+            alert('檔案格式錯誤，請確認是否選擇正確的檔案！');
+        }
+    };
+    
+    reader.onerror = function() {
+        alert('讀取檔案時發生錯誤！');
+    };
+    
+    reader.readAsText(file);
+};
+
+// 頁面載入時的初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 標題相關功能
+    const titleInput = document.querySelector('.title-input');
+    if (titleInput) {
+        titleInput.addEventListener('change', () => {
+            localStorage.setItem('timer-system-title', titleInput.value);
+        });
+
+        titleInput.addEventListener('input', function() {
+            document.title = this.value;
+        });
+
+        const savedTitle = localStorage.getItem('timer-system-title');
+        if (savedTitle) {
+            titleInput.value = savedTitle;
+        }
+    }
+
+    // 新增單一學生
+    function addStudent() {
+        const input = document.querySelector('.single-input');
+        const name = input.value.trim();
+        
+        if (name && !studentsList.includes(name)) {
+            studentsList.push(name);
+            updateStudentList();
+            input.value = '';
+        } else if (studentsList.includes(name)) {
+            alert('此學生已在清單中！');
+        } else {
+            alert('請輸入學生姓名！');
+        }
+    }
+
+    // 批次匯入學生
+    function importStudents() {
+        const textarea = document.querySelector('.bulk-input');
+        const names = textarea.value.trim().split('\n');
+        
+        let newCount = 0;
+        names.forEach(name => {
+            name = name.trim();
+            if (name && !studentsList.includes(name)) {
+                studentsList.push(name);
+                newCount++;
+            }
+        });
+        
+        if (newCount > 0) {
+            updateStudentList();
+            textarea.value = '';
+            alert(`成功匯入 ${newCount} 位學生`);
+        } else {
+            alert('沒有新增任何學生，請確認輸入內容！');
+        }
+    }
+
+    // 計時器相關功能
+    function startTimer() {
+        if (!mainTimer.running) {
+            mainTimer.running = true;
+            const startTime = Date.now() - mainTimer.time;
+            mainTimer.interval = setInterval(() => {
+                mainTimer.time = Date.now() - startTime;
+                document.querySelector('.timer').textContent = formatTime(mainTimer.time);
+            }, 10);
+            document.querySelector('.start-btn').textContent = '暫停';
+        } else {
+            clearInterval(mainTimer.interval);
+            mainTimer.running = false;
+            document.querySelector('.start-btn').textContent = '開始';
+        }
+    }
+
+    function stopTimer() {
+        clearInterval(mainTimer.interval);
+        mainTimer.running = false;
+        mainTimer.time = 0;
+        document.querySelector('.timer').textContent = '00:00.00';
+        document.querySelector('.start-btn').textContent = '開始';
+    }
+
+    function recordLap() {
+        if (mainTimer.time > 0) {
+            const currentTime = mainTimer.time;
+            mainTimer.records.push(currentTime);
+            updateLapRecords();
+        }
+    }
+
+    // 生成記錄表
+    function generateRecords() {
+        if (studentsList.length === 0) {
+            alert('請先新增學生！');
+            return;
+        }
+
+        const timerSection = document.getElementById('timer-section');
+        if (timerSection) {
+            timerSection.style.display = 'block';
+        }
+        
+        const container = document.getElementById('students-container');
+        if (container) {
+            container.innerHTML = '';
+            students = studentsList.map(name => {
+                const student = new Student(name);
+                const card = student.createCard();
+                container.appendChild(card);
+                return student;
+            });
+        }
+    }
+
+    // 清除所有記錄
+    function clearAllRecords() {
+        if (confirm('確定要清除所有記錄嗎？此操作無法復原。')) {
+            stopTimer();
+            mainTimer.records = [];
+            updateLapRecords();
+            
+            students.forEach(student => {
+                student.rank = '';
+                student.fitnessRecords = {
+                    jumpingDistance: '',
+                    sitAndReach: '',
+                    sitUps: '',
+                    shuttleRun: ''
+                };
+            });
+            generateRecords();
+        }
+    }
+
+    // 匯出成績
+    function exportResults() {
+        if (students.length === 0) {
+            alert('尚未有任何記錄！');
+            return;
+        }
+
+        const currentTitle = document.querySelector('.title-input')?.value || '體能測驗記錄';
+        const headers = [
+            '姓名',
+            '800公尺名次',
+            '800公尺成績',
+            '立定跳遠(公分)',
+            '坐姿體前彎(公分)',
+            '捲腹(次)',
+            '折返跑(次)'
+        ];
+
+        const csvRows = [headers];
+
+        students.forEach(student => {
+            const row = [
+                student.name,
+                student.rank || '--',
+                student.rank && mainTimer.records[parseInt(student.rank) - 1] ? 
+                    formatTime(mainTimer.records[parseInt(student.rank) - 1]) : '--',
+                student.fitnessRecords.jumpingDistance || '--',
+                student.fitnessRecords.sitAndReach || '--',
+                student.fitnessRecords.sitUps || '--',
+                student.fitnessRecords.shuttleRun || '--'
+            ];
+            csvRows.push(row);
+        });
+
+        const csvContent = '\uFEFF' + csvRows.map(row => row.join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        
+        link.href = url;
+        link.download = `${currentTitle}_${timestamp}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // 綁定所有事件
+    const addBtn = document.querySelector('.add-btn');
+    const singleInput = document.querySelector('.single-input');
+    const importBtn = document.querySelector('.import-btn');
+    const generateBtn = document.querySelector('.generate-btn');
+    const exportBtn = document.querySelector('.export-btn');
+    const clearAllBtn = document.querySelector('.clear-all-btn');
+    const startBtn = document.querySelector('.start-btn');
+    const stopBtn = document.querySelector('.stop-btn');
+    const recordBtn = document.querySelector('.record-btn');
+    const saveFileBtn = document.querySelector('.save-file-btn');
+
+    if (addBtn) addBtn.addEventListener('click', addStudent);
+    if (singleInput) singleInput.addEventListener('keypress', e => { if (e.key === 'Enter') addStudent(); });
+    if (importBtn) importBtn.addEventListener('click', importStudents);
+    if (generateBtn) generateBtn.addEventListener('click', generateRecords);
+    if (exportBtn) exportBtn.addEventListener('click', exportResults);
+    if (clearAllBtn) clearAllBtn.addEventListener('click', clearAllRecords);
+    if (startBtn) startBtn.addEventListener('click', startTimer);
+    if (stopBtn) stopBtn.addEventListener('click', stopTimer);
+    if (recordBtn) recordBtn.addEventListener('click', recordLap);
+    if (saveFileBtn) saveFileBtn.addEventListener('click', saveToFile);
+
+    // 初始化頁面
+    updateStudentList();
+});
+    </script>
+</body>
+</html>

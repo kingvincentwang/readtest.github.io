@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成語學習麻將 - 寓教於樂版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        // 跳過動作
+        function skipAction() {
+            gameState.phase = 'normal';
+            // 下一位玩家
+            gameState.currentPlayer = (gameState.lastDiscardedPlayer + 1) % 4;
+            updateDisplay();
+            
+            // AI 自動進行
+            if (gameState.currentPlayer !== 0) {
+                setTimeout(() => {
+                    aiPlay();
+                }, 1000);
+            }
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #2d5016 0%, #4a7c2a 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            width: 95vw;
+            height: 95vh;
+            background: #1a3d0a;
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 3px solid #8B4513;
+        }
+
+        .center-area {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            height: 320px;
+            background: #0f2607;
+            border-radius: 15px;
+            border: 2px solid #654321;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-info {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .dice-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .dice {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .dice-dots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 30px;
+            height: 30px;
+            gap: 2px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: #333;
+            border-radius: 50%;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            background: #8B4513;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #A0522D;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .player-area {
+            position: absolute;
+        }
+
+        .player-bottom {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+        }
+
+        .player-top {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+        }
+
+        .player-left {
+            left: 20px;
+            top: 40%;
+            transform: translateY(-50%);
+            height: 60%;
+            width: 160px;
+        }
+
+        .player-right {
+            right: 20px;
+            top: 40%;
+            transform: translateY(-50%);
+            height: 60%;
+            width: 160px;
+        }
+
+        .player-name {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .hand-tiles {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .player-left .hand-tiles,
+        .player-right .hand-tiles {
+            flex-direction: column;
+            align-items: center;
+            gap: 0px;
+        }
+
+        .melds {
+            display: flex;
+            gap: 1px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+            max-height: 60px;
+            overflow: visible;
+        }
+
+        .player-left .melds,
+        .player-right .melds {
+            flex-direction: column;
+            align-items: center;
+            gap: 0px;
+        }
+
+        .meld {
+            display: flex;
+            gap: 0px;
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid #FFD700;
+            border-radius: 4px;
+            padding: 1px;
+        }
+
+        .player-left .meld,
+        .player-right .meld {
+            flex-direction: column;
+            gap: -1px;
+        }
+
+        .tile {
+            width: 50px;
+            height: 70px;
+            background: linear-gradient(145deg, #f8f8f8, #e0e0e0);
+            border: 2px solid #999;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            padding: 3px;
+        }
+
+        .meld .tile {
+            width: 42px;
+            height: 58px;
+            cursor: default;
+            font-size: 8px;
+        }
+
+        .player-left .tile,
+        .player-right .tile {
+            width: 35px;
+            height: 50px;
+            font-size: 8px;
+            transform: rotate(90deg);
+            transform-origin: center;
+            margin: -3px 0;
+        }
+
+        .player-left .tile:hover,
+        .player-right .tile:hover {
+            transform: rotate(90deg) translateX(-8px);
+            z-index: 10;
+        }
+
+        .player-left .meld .tile,
+        .player-right .meld .tile {
+            width: 30px;
+            height: 44px;
+            font-size: 7px;
+            transform: rotate(90deg);
+            transform-origin: center;
+        }
+
+        .player-left .meld .tile:hover,
+        .player-right .meld .tile:hover {
+            transform: rotate(90deg);
+        }
+
+        .tile:hover {
+            transform: translateY(-6px);
+            box-shadow: 2px 6px 8px rgba(0,0,0,0.4);
+        }
+
+        .meld .tile:hover {
+            transform: none;
+        }
+
+        .tile.selected {
+            background: linear-gradient(145deg, #FFD700, #FFA500);
+            transform: translateY(-10px);
+            border-color: #FF6347;
+        }
+
+        .tile-back {
+            background: linear-gradient(145deg, #27AE60, #229954);
+            color: #FFD700;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .tile-symbol {
+            font-size: 12px;
+            line-height: 0.9;
+            margin-bottom: 2px;
+            font-weight: bold;
+        }
+
+        .player-left .tile-symbol,
+        .player-right .tile-symbol {
+            font-size: 9px;
+        }
+
+        .meld .tile-symbol {
+            font-size: 9px;
+        }
+
+        .player-left .meld .tile-symbol,
+        .player-right .meld .tile-symbol {
+            font-size: 7px;
+        }
+
+        .tile-number {
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 0.9;
+        }
+
+        .player-left .tile-number,
+        .player-right .tile-number {
+            font-size: 9px;
+        }
+
+        .meld .tile-number {
+            font-size: 9px;
+        }
+
+        .player-left .meld .tile-number,
+        .player-right .meld .tile-number {
+            font-size: 7px;
+        }
+
+        .discarded-tiles {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 340px;
+            height: 120px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            justify-content: center;
+            align-items: flex-start;
+            overflow: hidden;
+        }
+
+        .discarded-tile {
+            width: 32px;
+            height: 44px;
+            background: linear-gradient(145deg, #e8e8e8, #c8c8c8);
+            border: 1px solid #888;
+            border-radius: 3px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 6px;
+            font-weight: bold;
+            padding: 2px;
+        }
+
+        .discarded-tile.latest {
+            border: 2px solid #FF6347;
+            background: linear-gradient(145deg, #ffebee, #ffcdd2);
+        }
+
+        .discarded-symbol {
+            font-size: 7px;
+            line-height: 0.9;
+            font-weight: bold;
+        }
+
+        .discarded-number {
+            font-size: 7px;
+            font-weight: bold;
+            line-height: 0.9;
+        }
+
+        .current-player {
+            border: 3px solid #FFD700;
+            border-radius: 12px;
+            padding: 8px;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .game-status {
+            position: absolute;
+            top: 10px;
+            right: 150px;
+            color: #FFD700;
+            background: rgba(0,0,0,0.7);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 18px;
+            max-width: 180px;
+            z-index: 100;
+        }
+
+        .tile-count {
+            font-size: 16px;
+            color: #CCC;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .action-buttons {
+            position: fixed;
+            bottom: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.95);
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 3px solid #FFD700;
+            z-index: 1000;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+        }
+
+        .action-btn {
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.chi {
+            background: linear-gradient(145deg, #27AE60, #2ECC71);
+            color: white;
+        }
+
+        .action-btn.pon {
+            background: linear-gradient(145deg, #E74C3C, #C0392B);
+            color: white;
+        }
+
+        .action-btn.kan {
+            background: linear-gradient(145deg, #8E44AD, #9B59B6);
+            color: white;
+        }
+
+        .action-btn.skip {
+            background: linear-gradient(145deg, #95A5A6, #7F8C8D);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 牌面顏色 */
+        .man { color: #000; }
+        .pin { color: #E74C3C; }
+        .sou { color: #27AE60; }
+        .honor { color: #8E44AD; }
+
+        /* 特殊牌面樣式 */
+        .tile.man {
+            background: linear-gradient(145deg, #fff, #f5f5f5);
+        }
+        .tile.pin {
+            background: linear-gradient(145deg, #ffebee, #ffcdd2);
+        }
+        .tile.sou {
+            background: linear-gradient(145deg, #e8f5e8, #c8e6c9);
+        }
+        .tile.honor {
+            background: linear-gradient(145deg, #f3e5f5, #e1bee7);
+        }
+
+        .wind-indicator {
+            position: absolute;
+            font-size: 24px;
+            color: #FFD700;
+            font-weight: bold;
+            z-index: 50;
+        }
+
+        .wind-east { top: 30px; right: 50px; }
+        .wind-south { bottom: 30px; right: 30px; }
+        .wind-west { bottom: 30px; left: 30px; }
+        .wind-north { top: 30px; left: 30px; }
+
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: #FFD700;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1000;
+            border: 2px solid #FFD700;
+        }
+
+        .idiom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .idiom-content {
+            background: linear-gradient(145deg, #fff, #f0f0f0);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 3px solid #FFD700;
+        }
+
+        .idiom-title {
+            font-size: 30px;
+            color: #E74C3C;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .idiom-explanation {
+            font-size: 16px;
+            color: #2C3E50;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .idiom-close {
+            background: linear-gradient(145deg, #E74C3C, #C0392B);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .firework {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 3000;
+        }
+
+        .firework-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2500;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        @keyframes sparkle {
+            0%, 100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .celebration-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            z-index: 3500;
+            animation: bounce 0.6s ease-in-out infinite alternate;
+        }
+
+        @keyframes bounce {
+            from {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+
+        .win-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(231,76,60,0.1) 100%);
+            z-index: 2000;
+            animation: fadeInOut 3s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- 風位指示 -->
+        <div class="wind-indicator wind-east">東</div>
+        <div class="wind-indicator wind-south">南</div>
+        <div class="wind-indicator wind-west">西</div>
+        <div class="wind-indicator wind-north">北</div>
+
+        <!-- 遊戲狀態 -->
+        <div class="game-status">
+            <div>🎲 局數: <span id="round">東一局</span></div>
+            <div>🀄 剩餘: <span id="remaining-tiles">136</span>張</div>
+            <div>👤 當前: <span id="current-turn">玩家</span></div>
+            <div>🎯 狀態: <span id="game-phase">正常回合</span></div>
+        </div>
+
+        <!-- 中央區域 -->
+        <div class="center-area">
+            <div class="game-info">
+                <h3>📖 成語學習麻將 📖</h3>
+                <p>學成語‧知典故‧樂趣多</p>
+            </div>
+            <div class="dice-area">
+                <div class="dice" id="dice1">
+                    <div class="dice-dots" id="dice1-dots"></div>
+                </div>
+                <div class="dice" id="dice2">
+                    <div class="dice-dots" id="dice2-dots"></div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn" onclick="rollDice()">🎲 擲骰子</button>
+                <button class="btn" onclick="newGame()">🔄 新局</button>
+                <button class="btn" onclick="drawTile()" id="draw-btn">🀄 抓牌</button>
+                <button class="btn" onclick="discardSelected()" id="discard-btn">🗑️ 打牌</button>
+                <button class="btn" onclick="checkPlayerWin()" id="win-btn" style="background: #e74c3c;">🎉 胡牌</button>
+            </div>
+        </div>
+
+        <!-- 棄牌區 -->
+        <div class="discarded-tiles" id="discarded-tiles"></div>
+
+        <!-- 動作按鈕 -->
+        <div class="action-buttons hidden" id="action-buttons">
+            <button class="action-btn chi hidden" id="chi-btn" onclick="performChi()">🍃 吃</button>
+            <button class="action-btn pon hidden" id="pon-btn" onclick="performPon()">👊 碰</button>
+            <button class="action-btn kan hidden" id="kan-btn" onclick="performKan()">💥 槓</button>
+            <button class="action-btn skip" onclick="skipAction()">⏭️ 跳過</button>
+        </div>
+
+        <!-- 玩家區域 -->
+        <div class="player-area player-bottom current-player" id="player-0">
+            <div class="player-name">🎮 玩家 (您)</div>
+            <div class="melds" id="melds-0"></div>
+            <div class="hand-tiles" id="hand-0"></div>
+            <div class="tile-count">手牌: <span id="count-0">13</span>張 | 副露: <span id="meld-count-0">0</span>組</div>
+        </div>
+
+        <div class="player-area player-top" id="player-2">
+            <div class="player-name">🤖 玩家 3</div>
+            <div class="melds" id="melds-2"></div>
+            <div class="hand-tiles" id="hand-2"></div>
+            <div class="tile-count">手牌: <span id="count-2">13</span>張 | 副露: <span id="meld-count-2">0</span>組</div>
+        </div>
+
+        <div class="player-area player-left" id="player-3">
+            <div class="player-name">🤖 玩家 4</div>
+            <div class="melds" id="melds-3"></div>
+            <div class="hand-tiles" id="hand-3"></div>
+            <div class="tile-count">手牌: <span id="count-3">13</span>張 | 副露: <span id="meld-count-3">0</span>組</div>
+        </div>
+
+        <div class="player-area player-right" id="player-1">
+            <div class="player-name">🤖 玩家 2</div>
+            <div class="melds" id="melds-1"></div>
+            <div class="hand-tiles" id="hand-1"></div>
+            <div class="tile-count">手牌: <span id="count-1">13</span>張 | 副露: <span id="meld-count-1">0</span>組</div>
+        </div>
+    </div>
+
+    <script>
+        // 音效系統
+        class SoundSystem {
+            constructor() {
+                this.audioContext = null;
+                this.initAudioContext();
+            }
+
+            initAudioContext() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Web Audio API 不支援');
+                }
+            }
+
+            // 創建音調
+            createTone(frequency, duration, volume = 0.3, type = 'sine') {
+                if (!this.audioContext) return;
+
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+
+                gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+
+                oscillator.start(this.audioContext.currentTime);
+                oscillator.stop(this.audioContext.currentTime + duration);
+            }
+
+            // 創建複合音效
+            createComplexSound(frequencies, duration, volume = 0.2) {
+                frequencies.forEach((freq, index) => {
+                    setTimeout(() => {
+                        this.createTone(freq, duration / frequencies.length, volume);
+                    }, index * (duration * 1000 / frequencies.length));
+                });
+            }
+
+            // 擲骰子音效
+            playDiceSound() {
+                this.createComplexSound([200, 300, 250, 350], 0.6, 0.3);
+            }
+
+            // 抓牌音效
+            playDrawSound() {
+                this.createTone(440, 0.2, 0.25, 'triangle');
+            }
+
+            // 打牌音效
+            playDiscardSound() {
+                this.createTone(330, 0.3, 0.3, 'square');
+            }
+
+            // 吃牌音效
+            playChiSound() {
+                this.createComplexSound([523, 659, 784], 0.8, 0.3);
+            }
+
+            // 碰牌音效
+            playPonSound() {
+                this.createComplexSound([349, 349, 349], 0.6, 0.4);
+            }
+
+            // 槓牌音效
+            playKanSound() {
+                this.createComplexSound([262, 330, 392, 523], 1.0, 0.35);
+            }
+
+            // 新局音效
+            playNewGameSound() {
+                this.createComplexSound([523, 659, 784, 1047], 1.2, 0.3);
+            }
+
+            // 胡牌音效
+            playWinSound() {
+                // 勝利音效序列
+                const winSequence = [523, 659, 784, 1047, 1319];
+                winSequence.forEach((freq, index) => {
+                    setTimeout(() => {
+                        this.createTone(freq, 0.4, 0.4, 'sine');
+                    }, index * 200);
+                });
+                
+                // 額外的和弦
+                setTimeout(() => {
+                    this.createTone(523, 2.0, 0.2, 'sine');
+                    this.createTone(659, 2.0, 0.2, 'sine');
+                    this.createTone(784, 2.0, 0.2, 'sine');
+                }, 1000);
+            }
+        }
+
+        // 煙火特效系統
+        class FireworkSystem {
+            constructor() {
+                this.container = null;
+                this.createContainer();
+            }
+
+            createContainer() {
+                this.container = document.createElement('div');
+                this.container.className = 'firework-container';
+                document.body.appendChild(this.container);
+            }
+
+            // 創建單個煙火
+            createFirework(x, y, color) {
+                const particleCount = 15;
+                const particles = [];
+
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'firework';
+                    particle.style.backgroundColor = color;
+                    particle.style.left = x + 'px';
+                    particle.style.top = y + 'px';
+                    
+                    const angle = (i / particleCount) * Math.PI * 2;
+                    const velocity = 50 + Math.random() * 50;
+                    const lifetime = 1000 + Math.random() * 500;
+
+                    this.container.appendChild(particle);
+                    particles.push(particle);
+
+                    // 動畫粒子
+                    this.animateParticle(particle, angle, velocity, lifetime);
+                }
+
+                return particles;
+            }
+
+            // 動畫粒子
+            animateParticle(particle, angle, velocity, lifetime) {
+                const startTime = Date.now();
+                const initialX = parseInt(particle.style.left);
+                const initialY = parseInt(particle.style.top);
+
+                const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = elapsed / lifetime;
+
+                    if (progress >= 1) {
+                        if (this.container.contains(particle)) {
+                            this.container.removeChild(particle);
+                        }
+                        return;
+                    }
+
+                    const distance = velocity * progress;
+                    const gravity = 100 * progress * progress;
+                    
+                    const x = initialX + Math.cos(angle) * distance;
+                    const y = initialY + Math.sin(angle) * distance + gravity;
+
+                    particle.style.left = x + 'px';
+                    particle.style.top = y + 'px';
+                    particle.style.opacity = 1 - progress;
+                    particle.style.transform = `scale(${1 - progress * 0.5})`;
+
+                    requestAnimationFrame(animate);
+                };
+
+                animate();
+            }
+
+            // 發射多個煙火
+            launchFireworks() {
+                const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'];
+                const fireworkCount = 8;
+
+                for (let i = 0; i < fireworkCount; i++) {
+                    setTimeout(() => {
+                        const x = 200 + Math.random() * (window.innerWidth - 400);
+                        const y = 100 + Math.random() * 200;
+                        const color = colors[Math.floor(Math.random() * colors.length)];
+                        
+                        this.createFirework(x, y, color);
+                    }, i * 300);
+                }
+            }
+
+            // 創建慶祝效果
+            celebrate() {
+                // 創建背景覆蓋層
+                const overlay = document.createElement('div');
+                overlay.className = 'win-overlay';
+                document.body.appendChild(overlay);
+
+                // 創建慶祝文字
+                const celebrationText = document.createElement('div');
+                celebrationText.className = 'celebration-text';
+                celebrationText.textContent = '🎊 恭喜胡牌 🎊';
+                document.body.appendChild(celebrationText);
+
+                // 發射煙火
+                this.launchFireworks();
+
+                // 清理效果
+                setTimeout(() => {
+                    if (document.body.contains(overlay)) {
+                        document.body.removeChild(overlay);
+                    }
+                    if (document.body.contains(celebrationText)) {
+                        document.body.removeChild(celebrationText);
+                    }
+                }, 3000);
+            }
+        }
+
+        // 初始化音效和特效系統
+        const soundSystem = new SoundSystem();
+        const fireworkSystem = new FireworkSystem();
+        const idiomExplanations = {
+            '一帆風順': '比喻能夠毫不費力地勝利完成某事情，或事情能夠順利進行。',
+            '二龍戲珠': '兩條龍相對，戲玩著一顆寶珠。比喻技藝高超或勢力相當。',
+            '三羊開泰': '《易經》稱爻連的為陽卦，斷的為陰爻，正月為泰卦，三陽生於下。比喻冬去春來，萬象更新。',
+            '四季平安': '一年四季都平平安安，沒有災禍。',
+            '五福臨門': '五種福氣同時降臨。比喻運氣極好。',
+            '六六大順': '形容一切順利，吉祥如意。',
+            '七星高照': '北斗七星高高照耀。比喻受到幸運星的照耀，運氣很好。',
+            '八方來財': '從四面八方聚集財富。比喻財源廣進。',
+            '九九歸一': '經過多次的變化或轉折，最終回到原來的狀態。',
+            
+            '一元復始': '新的一年開始。也比喻事情重新開始。',
+            '二話不說': '不說任何別的話。指立即行動。',
+            '三生有幸': '三世都很幸運。比喻非常幸運。',
+            '四通八達': '四面八方都有路可通。形容交通極便利。',
+            '五穀豐登': '五穀都獲得豐收。泛指農作物豐收。',
+            '六合同春': '六合指天地和東西南北四方，即天下；春，春季。指天下都充滿了春意。',
+            '七福齊天': '七種福氣都達到天的高度。比喻福氣極大。',
+            '八面玲瓏': '原指窗戶明亮軒敞，後用來形容人處世圓滑，待人接物八面討好。',
+            '九霄雲外': '在九層天的外面。比喻非常高遠的地方或完全想像不到的地方。',
+            
+            '一箭雙鵰': '原指射箭技術高超，一箭射中兩隻雕。後比喻做一件事達到兩個目的。',
+            '二人同心': '比喻只要兩個人一條心，就能發揮很大的力量。',
+            '三思而行': '做事前要反復考慮。',
+            '四海升平': '指天下太平。',
+            '五彩繽紛': '指顏色繁多，色彩繁雜。',
+            '六藝精通': '指對六種技藝都很精通。六藝：禮、樂、射、御、書、數。',
+            '七竅玲瓏': '形容聰明靈巧。相傳心有七竅，故稱。',
+            '八斗之才': '比喻人極有才華。',
+            '九天攬月': '到天的最高處去摘月。常形容壯志豪情。',
+            
+            '東風得意': '舊指考中進士。後常用以稱進士及第。',
+            '南山壽比': '比喻人壽命極長。',
+            '西窗剪燭': '原指思念遠方妻子，盼望相聚夜語。後泛指親友聚談。',
+            '北斗指路': '比喻能指引方向的人或事物。',
+            '中流砥柱': '就像屹立在黃河急流中的砥柱山一樣。比喻堅強獨立的人能在動蕩的環境中起支柱作用。',
+            '發揚光大': '發展和提高，使更加完善或偉大。',
+            '白璧無瑕': '潔白的美玉上面沒有一點小斑。比喻人或事物完美無缺。'
+        };
+
+        // 顯示成語解釋
+        function showIdiomExplanation(tile) {
+            const explanation = idiomExplanations[tile.symbol];
+            if (!explanation) return;
+            
+            const modal = document.createElement('div');
+            modal.className = 'idiom-modal';
+            modal.innerHTML = `
+                <div class="idiom-content" onclick="event.stopPropagation()">
+                    <h3 class="idiom-title">${tile.symbol}</h3>
+                    <p class="idiom-explanation">${explanation}</p>
+                    <button class="idiom-close" onclick="closeIdiomModal()">知道了</button>
+                </div>
+            `;
+            
+            // 點擊彈窗外部也能關閉
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    closeIdiomModal();
+                }
+            };
+            
+            document.body.appendChild(modal);
+            
+            // 3秒後自動關閉
+            setTimeout(() => {
+                if (document.body.contains(modal)) {
+                    document.body.removeChild(modal);
+                }
+            }, 3000);
+        }
+
+        // 關閉成語解釋彈窗
+        function closeIdiomModal() {
+            const modal = document.querySelector('.idiom-modal');
+            if (modal && document.body.contains(modal)) {
+                document.body.removeChild(modal);
+            }
+        }
+        const tiles = {
+            // 萬子 (1-9) - 以數字開頭的吉祥成語
+            man: [
+                {symbol: '一帆風順', name: '一萬', value: 1},
+                {symbol: '二龍戲珠', name: '二萬', value: 2},
+                {symbol: '三羊開泰', name: '三萬', value: 3},
+                {symbol: '四季平安', name: '四萬', value: 4},
+                {symbol: '五福臨門', name: '五萬', value: 5},
+                {symbol: '六六大順', name: '六萬', value: 6},
+                {symbol: '七星高照', name: '七萬', value: 7},
+                {symbol: '八方來財', name: '八萬', value: 8},
+                {symbol: '九九歸一', name: '九萬', value: 9}
+            ],
+            // 筒子 (1-9) - 以數字開頭的成語
+            pin: [
+                {symbol: '一元復始', name: '一筒', value: 1},
+                {symbol: '二話不說', name: '二筒', value: 2},
+                {symbol: '三生有幸', name: '三筒', value: 3},
+                {symbol: '四通八達', name: '四筒', value: 4},
+                {symbol: '五穀豐登', name: '五筒', value: 5},
+                {symbol: '六合同春', name: '六筒', value: 6},
+                {symbol: '七福齊天', name: '七筒', value: 7},
+                {symbol: '八面玲瓏', name: '八筒', value: 8},
+                {symbol: '九霄雲外', name: '九筒', value: 9}
+            ],
+            // 索子 (1-9) - 以數字開頭的成語
+            sou: [
+                {symbol: '一箭雙鵰', name: '一索', value: 1},
+                {symbol: '二人同心', name: '二索', value: 2},
+                {symbol: '三思而行', name: '三索', value: 3},
+                {symbol: '四海升平', name: '四索', value: 4},
+                {symbol: '五彩繽紛', name: '五索', value: 5},
+                {symbol: '六藝精通', name: '六索', value: 6},
+                {symbol: '七竅玲瓏', name: '七索', value: 7},
+                {symbol: '八斗之才', name: '八索', value: 8},
+                {symbol: '九天攬月', name: '九索', value: 9}
+            ],
+            // 字牌 - 方位和顏色相關成語
+            honor: [
+                {symbol: '東風得意', name: '東', value: 10},
+                {symbol: '南山壽比', name: '南', value: 11},
+                {symbol: '西窗剪燭', name: '西', value: 12},
+                {symbol: '北斗指路', name: '北', value: 13},
+                {symbol: '中流砥柱', name: '中', value: 14},
+                {symbol: '發揚光大', name: '發', value: 15},
+                {symbol: '白璧無瑕', name: '白', value: 16}
+            ]
+        };
+
+        // 遊戲狀態
+        let gameState = {
+            currentPlayer: 0,
+            players: [[], [], [], []], // 玩家手牌
+            melds: [[], [], [], []], // 玩家副露
+            discardedTiles: [],
+            remainingTiles: [],
+            selectedTile: null,
+            round: '東一局',
+            phase: 'normal', // normal, waiting-action
+            lastDiscardedTile: null,
+            lastDiscardedPlayer: null,
+            waitingPlayer: null,
+            availableActions: []
+        };
+
+        // 初始化牌堆
+        function initializeTiles() {
+            const deck = [];
+            Object.entries(tiles).forEach(([category, tileList]) => {
+                tileList.forEach(tile => {
+                    for (let i = 0; i < 4; i++) {
+                        deck.push({...tile, category});
+                    }
+                });
+            });
+            
+            // 洗牌
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            
+            gameState.remainingTiles = deck;
+        }
+
+        // 發牌
+        function dealTiles() {
+            gameState.players = [[], [], [], []];
+            gameState.melds = [[], [], [], []];
+            
+            for (let player = 0; player < 4; player++) {
+                for (let i = 0; i < 13; i++) {
+                    if (gameState.remainingTiles.length > 0) {
+                        gameState.players[player].push(gameState.remainingTiles.pop());
+                    }
+                }
+                sortHand(player);
+            }
+            
+            updateDisplay();
+        }
+
+        // 排序手牌
+        function sortHand(player) {
+            gameState.players[player].sort((a, b) => {
+                if (a.category !== b.category) {
+                    const order = ['man', 'pin', 'sou', 'honor'];
+                    return order.indexOf(a.category) - order.indexOf(b.category);
+                }
+                return a.value - b.value;
+            });
+        }
+
+        // 創建牌面元素
+        function createTileElement(tile, isBack = false, isMeld = false) {
+            const tileElement = document.createElement('div');
+            
+            if (isBack) {
+                tileElement.className = 'tile tile-back';
+                tileElement.innerHTML = ''; // 牌背面不顯示文字
+            } else {
+                tileElement.className = `tile ${tile.category}`;
+                if (isMeld) tileElement.classList.add('meld-tile');
+                
+                // 將四字成語分成兩行顯示
+                const text = tile.symbol;
+                const firstLine = text.substring(0, 2);
+                const secondLine = text.substring(2, 4);
+                
+                tileElement.innerHTML = `<div class="tile-text">${firstLine}<br>${secondLine}</div>`;
+            }
+            
+            return tileElement;
+        }
+
+        // 創建棄牌元素
+        function createDiscardedTileElement(tile, isLatest = false) {
+            const tileElement = document.createElement('div');
+            tileElement.className = `discarded-tile ${tile.category}`;
+            if (isLatest) tileElement.classList.add('latest');
+            
+            // 將四字成語分成兩行顯示
+            const text = tile.symbol;
+            const firstLine = text.substring(0, 2);
+            const secondLine = text.substring(2, 4);
+            
+            tileElement.innerHTML = `<div class="discarded-text">${firstLine}<br>${secondLine}</div>`;
+            return tileElement;
+        }
+
+        // 更新顯示
+        function updateDisplay() {
+            // 更新玩家手牌和副露
+            for (let player = 0; player < 4; player++) {
+                const handElement = document.getElementById(`hand-${player}`);
+                const meldsElement = document.getElementById(`melds-${player}`);
+                const countElement = document.getElementById(`count-${player}`);
+                const meldCountElement = document.getElementById(`meld-count-${player}`);
+                
+                // 清空現有內容
+                handElement.innerHTML = '';
+                meldsElement.innerHTML = '';
+                
+                // 顯示副露
+                gameState.melds[player].forEach(meld => {
+                    const meldDiv = document.createElement('div');
+                    meldDiv.className = 'meld';
+                    meld.tiles.forEach(tile => {
+                        const tileElement = createTileElement(tile, false, true);
+                        meldDiv.appendChild(tileElement);
+                    });
+                    meldsElement.appendChild(meldDiv);
+                });
+                
+                // 顯示手牌
+                if (player === 0) {
+                    gameState.players[player].forEach((tile, index) => {
+                        const tileElement = createTileElement(tile);
+                        tileElement.onclick = () => selectTile(player, index);
+                        handElement.appendChild(tileElement);
+                    });
+                } else {
+                    gameState.players[player].forEach(() => {
+                        const tileElement = createTileElement(null, true);
+                        handElement.appendChild(tileElement);
+                    });
+                }
+                
+                countElement.textContent = gameState.players[player].length;
+                meldCountElement.textContent = gameState.melds[player].length;
+            }
+            
+            // 更新棄牌區（限制顯示數量避免遮擋）
+            const discardedElement = document.getElementById('discarded-tiles');
+            discardedElement.innerHTML = '';
+            const maxDiscardedTiles = 12; // 限制最大顯示數量
+            const tilesToShow = gameState.discardedTiles.slice(-maxDiscardedTiles);
+            
+            tilesToShow.forEach((tile, index) => {
+                const isLatest = index === tilesToShow.length - 1 && index === gameState.discardedTiles.length - 1;
+                const tileElement = createDiscardedTileElement(tile, isLatest);
+                discardedElement.appendChild(tileElement);
+            });
+            
+            // 更新遊戲狀態
+            document.getElementById('remaining-tiles').textContent = gameState.remainingTiles.length;
+            document.getElementById('current-turn').textContent = `玩家 ${gameState.currentPlayer + 1}`;
+            document.getElementById('round').textContent = gameState.round;
+            document.getElementById('game-phase').textContent = 
+                gameState.phase === 'waiting-action' ? '等待動作選擇' : '正常回合';
+            
+            // 更新當前玩家高亮
+            for (let i = 0; i < 4; i++) {
+                const playerElement = document.getElementById(`player-${i}`);
+                if (i === gameState.currentPlayer && gameState.phase === 'normal') {
+                    playerElement.classList.add('current-player');
+                } else {
+                    playerElement.classList.remove('current-player');
+                }
+            }
+            
+            // 更新按鈕狀態
+            updateButtonStates();
+        }
+
+        // 更新按鈕狀態
+        function updateButtonStates() {
+            const drawBtn = document.getElementById('draw-btn');
+            const discardBtn = document.getElementById('discard-btn');
+            const winBtn = document.getElementById('win-btn');
+            const actionButtons = document.getElementById('action-buttons');
+            
+            if (gameState.phase === 'waiting-action') {
+                drawBtn.disabled = true;
+                discardBtn.disabled = true;
+                winBtn.disabled = true;
+                actionButtons.classList.remove('hidden');
+            } else if (gameState.phase === 'game-over') {
+                drawBtn.disabled = true;
+                discardBtn.disabled = true;
+                winBtn.disabled = true;
+                actionButtons.classList.add('hidden');
+            } else {
+                drawBtn.disabled = gameState.currentPlayer !== 0;
+                discardBtn.disabled = gameState.currentPlayer !== 0 || gameState.selectedTile === null;
+                winBtn.disabled = gameState.currentPlayer !== 0;
+                actionButtons.classList.add('hidden');
+            }
+        }
+
+        // 檢查吃牌可能性
+        function checkChi(player, discardedTile) {
+            if (discardedTile.category === 'honor') return false;
+            if ((gameState.lastDiscardedPlayer + 1) % 4 !== player) return false; // 只能吃上家的牌
+            
+            const hand = gameState.players[player];
+            const value = discardedTile.value;
+            
+            // 檢查可能的順子組合
+            const combinations = [];
+            
+            // ABC型 (discarded, +1, +2)
+            if (value <= 7) {
+                const tile1 = hand.find(t => t.category === discardedTile.category && t.value === value + 1);
+                const tile2 = hand.find(t => t.category === discardedTile.category && t.value === value + 2);
+                if (tile1 && tile2) {
+                    combinations.push([discardedTile, tile1, tile2]);
+                }
+            }
+            
+            // BAC型 (-1, discarded, +1)
+            if (value >= 2 && value <= 8) {
+                const tile1 = hand.find(t => t.category === discardedTile.category && t.value === value - 1);
+                const tile2 = hand.find(t => t.category === discardedTile.category && t.value === value + 1);
+                if (tile1 && tile2) {
+                    combinations.push([tile1, discardedTile, tile2]);
+                }
+            }
+            
+            // CBA型 (-2, -1, discarded)
+            if (value >= 3) {
+                const tile1 = hand.find(t => t.category === discardedTile.category && t.value === value - 2);
+                const tile2 = hand.find(t => t.category === discardedTile.category && t.value === value - 1);
+                if (tile1 && tile2) {
+                    combinations.push([tile1, tile2, discardedTile]);
+                }
+            }
+            
+            return combinations.length > 0 ? combinations : false;
+        }
+
+        // 檢查碰牌可能性
+        function checkPon(player, discardedTile) {
+            const hand = gameState.players[player];
+            const sameCards = hand.filter(tile => 
+                tile.category === discardedTile.category && 
+                tile.value === discardedTile.value
+            );
+            return sameCards.length >= 2 ? sameCards.slice(0, 2) : false;
+        }
+
+        // 檢查槓牌可能性
+        function checkKan(player, discardedTile) {
+            const hand = gameState.players[player];
+            const sameCards = hand.filter(tile => 
+                tile.category === discardedTile.category && 
+                tile.value === discardedTile.value
+            );
+            return sameCards.length >= 3 ? sameCards.slice(0, 3) : false;
+        }
+
+        // 打牌後檢查其他玩家動作
+        function checkActions(discardedTile, discardedPlayer) {
+            gameState.lastDiscardedTile = discardedTile;
+            gameState.lastDiscardedPlayer = discardedPlayer;
+            gameState.availableActions = [];
+            
+            // 檢查其他玩家的動作可能性
+            for (let i = 1; i < 4; i++) {
+                const player = (discardedPlayer + i) % 4;
+                if (player === 0) { // 只處理玩家的動作
+                    
+                    // 先檢查是否能胡牌（優先級最高）
+                    // 臨時將棄牌加入手牌檢查胡牌
+                    gameState.players[player].push(discardedTile);
+                    const canWin = checkWin(player);
+                    gameState.players[player].pop(); // 移除臨時加入的牌
+                    
+                    if (canWin) {
+                        // 如果能胡牌，先播放音效和特效
+                        soundSystem.playWinSound();
+                        fireworkSystem.celebrate();
+                        
+                        // 正式加入手牌和移除棄牌
+                        gameState.players[player].push(discardedTile);
+                        gameState.discardedTiles.pop();
+                        
+                        // 顯示胡牌的成語解釋
+                        setTimeout(() => {
+                            showIdiomExplanation(discardedTile);
+                        }, 500);
+                        
+                        // 延遲顯示勝利消息
+                        setTimeout(() => {
+                            const message = document.createElement('div');
+                            message.className = 'message';
+                            message.style.fontSize = '24px';
+                            message.style.background = 'rgba(231, 76, 60, 0.95)';
+                            message.style.color = '#fff';
+                            message.style.padding = '30px';
+                            message.textContent = '🎉 您胡牌了！🎉';
+                            document.body.appendChild(message);
+                            
+                            setTimeout(() => {
+                                if (document.body.contains(message)) {
+                                    document.body.removeChild(message);
+                                }
+                            }, 4000);
+                        }, 1500);
+                        
+                        gameState.phase = 'game-over';
+                        updateDisplay();
+                        return true;
+                    }
+                    
+                    // 如果不能胡牌，再檢查吃碰槓
+                    const actions = [];
+                    
+                    const chiPossible = checkChi(player, discardedTile);
+                    const ponPossible = checkPon(player, discardedTile);
+                    const kanPossible = checkKan(player, discardedTile);
+                    
+                    if (chiPossible) actions.push({type: 'chi', combinations: chiPossible});
+                    if (ponPossible) actions.push({type: 'pon', tiles: ponPossible});
+                    if (kanPossible) actions.push({type: 'kan', tiles: kanPossible});
+                    
+                    if (actions.length > 0) {
+                        gameState.availableActions = actions;
+                        gameState.waitingPlayer = player;
+                        gameState.phase = 'waiting-action';
+                        showActionButtons();
+                        updateDisplay();
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        // 顯示動作按鈕
+        function showActionButtons() {
+            const chiBtn = document.getElementById('chi-btn');
+            const ponBtn = document.getElementById('pon-btn');
+            const kanBtn = document.getElementById('kan-btn');
+            
+            chiBtn.classList.add('hidden');
+            ponBtn.classList.add('hidden');
+            kanBtn.classList.add('hidden');
+            
+            gameState.availableActions.forEach(action => {
+                if (action.type === 'chi') chiBtn.classList.remove('hidden');
+                if (action.type === 'pon') ponBtn.classList.remove('hidden');
+                if (action.type === 'kan') kanBtn.classList.remove('hidden');
+            });
+        }
+
+        // 執行吃牌
+        function performChi() {
+            const action = gameState.availableActions.find(a => a.type === 'chi');
+            if (!action) return;
+
+            // 播放吃牌音效
+            soundSystem.playChiSound();
+            
+            // 使用第一個組合（實際遊戲中應該讓玩家選擇）
+            const combination = action.combinations[0];
+            const player = gameState.waitingPlayer;
+            
+            // 顯示吃到牌的成語解釋
+            showIdiomExplanation(gameState.lastDiscardedTile);
+            
+            // 從手牌中移除相應的牌
+            combination.forEach(tile => {
+                if (tile !== gameState.lastDiscardedTile) {
+                    const index = gameState.players[player].findIndex(t => 
+                        t.category === tile.category && t.value === tile.value
+                    );
+                    if (index !== -1) {
+                        gameState.players[player].splice(index, 1);
+                    }
+                }
+            });
+            
+            // 移除棄牌
+            gameState.discardedTiles.pop();
+            
+            // 添加到副露
+            gameState.melds[player].push({
+                type: 'chi',
+                tiles: combination
+            });
+            
+            // 當前玩家變更
+            gameState.currentPlayer = player;
+            gameState.phase = 'normal';
+            
+            // 檢查是否胡牌
+            if (autoCheckWin(player)) return;
+            
+            showMessage('吃牌成功！');
+            updateDisplay();
+        }
+
+        // 執行碰牌
+        function performPon() {
+            const action = gameState.availableActions.find(a => a.type === 'pon');
+            if (!action) return;
+
+            // 播放碰牌音效
+            soundSystem.playPonSound();
+            
+            const player = gameState.waitingPlayer;
+            const tilesNeeded = action.tiles;
+            
+            // 顯示碰到牌的成語解釋
+            showIdiomExplanation(gameState.lastDiscardedTile);
+            
+            // 從手牌中移除相應的牌
+            tilesNeeded.forEach(tile => {
+                const index = gameState.players[player].findIndex(t => 
+                    t.category === tile.category && t.value === tile.value
+                );
+                if (index !== -1) {
+                    gameState.players[player].splice(index, 1);
+                }
+            });
+            
+            // 移除棄牌
+            const discardedTile = gameState.discardedTiles.pop();
+            
+            // 添加到副露
+            gameState.melds[player].push({
+                type: 'pon',
+                tiles: [discardedTile, ...tilesNeeded]
+            });
+            
+            // 當前玩家變更
+            gameState.currentPlayer = player;
+            gameState.phase = 'normal';
+            
+            // 檢查是否胡牌
+            if (autoCheckWin(player)) return;
+            
+            showMessage('碰牌成功！');
+            updateDisplay();
+        }
+
+        // 執行槓牌
+        function performKan() {
+            const action = gameState.availableActions.find(a => a.type === 'kan');
+            if (!action) return;
+
+            // 播放槓牌音效
+            soundSystem.playKanSound();
+            
+            const player = gameState.waitingPlayer;
+            const tilesNeeded = action.tiles;
+            
+            // 顯示槓到牌的成語解釋
+            showIdiomExplanation(gameState.lastDiscardedTile);
+            
+            // 從手牌中移除相應的牌
+            tilesNeeded.forEach(tile => {
+                const index = gameState.players[player].findIndex(t => 
+                    t.category === tile.category && t.value === tile.value
+                );
+                if (index !== -1) {
+                    gameState.players[player].splice(index, 1);
+                }
+            });
+            
+            // 移除棄牌
+            const discardedTile = gameState.discardedTiles.pop();
+            
+            // 添加到副露
+            gameState.melds[player].push({
+                type: 'kan',
+                tiles: [discardedTile, ...tilesNeeded]
+            });
+            
+            // 槓牌後補牌
+            if (gameState.remainingTiles.length > 0) {
+                const newTile = gameState.remainingTiles.pop();
+                gameState.players[player].push(newTile);
+                sortHand(player);
+                
+                // 顯示補牌的成語解釋
+                setTimeout(() => {
+                    showIdiomExplanation(newTile);
+                }, 1000);
+            }
+            
+            // 當前玩家變更
+            gameState.currentPlayer = player;
+            gameState.phase = 'normal';
+            
+            // 檢查是否胡牌
+            if (autoCheckWin(player)) return;
+            
+            showMessage('槓牌成功！補一張牌');
+            updateDisplay();
+        }
+
+        // 檢查胡牌
+        function checkWin(player) {
+            const hand = [...gameState.players[player]];
+            const melds = gameState.melds[player];
+            
+            // 總牌數檢查（手牌 + 副露應該是14張）
+            const totalTiles = hand.length + melds.reduce((sum, meld) => sum + meld.tiles.length, 0);
+            if (totalTiles !== 14) return false;
+            
+            // 副露已經是完成的面子，只需檢查手牌部分
+            const meldCount = melds.length;
+            const requiredPairs = 1;
+            const requiredMelds = 4 - meldCount;
+            
+            return canFormWinningHand(hand, requiredMelds, requiredPairs);
+        }
+
+        // 檢查是否能組成胡牌手牌
+        function canFormWinningHand(tiles, needMelds, needPairs) {
+            if (needMelds === 0 && needPairs === 0) {
+                return tiles.length === 0;
+            }
+            
+            if (tiles.length === 0) {
+                return needMelds === 0 && needPairs === 0;
+            }
+            
+            // 嘗試組成對子
+            if (needPairs > 0) {
+                for (let i = 0; i < tiles.length - 1; i++) {
+                    if (tiles[i].category === tiles[i + 1].category && 
+                        tiles[i].value === tiles[i + 1].value) {
+                        
+                        const remaining = [...tiles];
+                        remaining.splice(i, 2);
+                        
+                        if (canFormWinningHand(remaining, needMelds, needPairs - 1)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            // 嘗試組成刻子
+            if (needMelds > 0) {
+                for (let i = 0; i < tiles.length - 2; i++) {
+                    if (tiles[i].category === tiles[i + 1].category && 
+                        tiles[i].value === tiles[i + 1].value &&
+                        tiles[i].category === tiles[i + 2].category && 
+                        tiles[i].value === tiles[i + 2].value) {
+                        
+                        const remaining = [...tiles];
+                        remaining.splice(i, 3);
+                        
+                        if (canFormWinningHand(remaining, needMelds - 1, needPairs)) {
+                            return true;
+                        }
+                    }
+                }
+                
+                // 嘗試組成順子（只有數字牌）
+                for (let i = 0; i < tiles.length; i++) {
+                    if (tiles[i].category !== 'honor' && tiles[i].value <= 7) {
+                        // 尋找連續的三張牌
+                        const tile1 = tiles[i];
+                        let tile2Index = -1, tile3Index = -1;
+                        
+                        for (let j = i + 1; j < tiles.length; j++) {
+                            if (tiles[j].category === tile1.category && tiles[j].value === tile1.value + 1) {
+                                tile2Index = j;
+                                break;
+                            }
+                        }
+                        
+                        if (tile2Index !== -1) {
+                            for (let k = tile2Index + 1; k < tiles.length; k++) {
+                                if (tiles[k].category === tile1.category && tiles[k].value === tile1.value + 2) {
+                                    tile3Index = k;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (tile2Index !== -1 && tile3Index !== -1) {
+                            const remaining = [...tiles];
+                            remaining.splice(tile3Index, 1);
+                            remaining.splice(tile2Index, 1);
+                            remaining.splice(i, 1);
+                            
+                            if (canFormWinningHand(remaining, needMelds - 1, needPairs)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        // 玩家主動檢查胡牌
+        function checkPlayerWin() {
+            if (gameState.currentPlayer !== 0) return;
+            
+            if (checkWin(0)) {
+                // 播放音效和特效
+                soundSystem.playWinSound();
+                fireworkSystem.celebrate();
+                
+                // 如果胡牌，顯示最後抓到的牌的解釋
+                const lastTile = gameState.players[0][gameState.players[0].length - 1];
+                setTimeout(() => {
+                    showIdiomExplanation(lastTile);
+                }, 500);
+                
+                // 延遲顯示勝利消息
+                setTimeout(() => {
+                    const message = document.createElement('div');
+                    message.className = 'message';
+                    message.style.fontSize = '24px';
+                    message.style.background = 'rgba(231, 76, 60, 0.95)';
+                    message.style.color = '#fff';
+                    message.style.padding = '30px';
+                    message.textContent = '🎉 恭喜胡牌！🎉';
+                    document.body.appendChild(message);
+                    
+                    setTimeout(() => {
+                        if (document.body.contains(message)) {
+                            document.body.removeChild(message);
+                        }
+                    }, 4000);
+                }, 1500);
+                
+                gameState.phase = 'game-over';
+                updateDisplay();
+            } else {
+                showMessage('還沒有胡牌，繼續努力！');
+            }
+        }
+
+        // 顯示胜利消息（保留用於非玩家胡牌情況）
+        function showWinMessage(text) {
+            const message = document.createElement('div');
+            message.className = 'message';
+            message.style.fontSize = '24px';
+            message.style.background = 'rgba(231, 76, 60, 0.95)';
+            message.style.color = '#fff';
+            message.style.padding = '30px';
+            message.textContent = text;
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                if (document.body.contains(message)) {
+                    document.body.removeChild(message);
+                }
+            }, 4000);
+        }
+
+        // 自動檢查胡牌（在抓牌或吃碰槓後）
+        function autoCheckWin(player) {
+            if (checkWin(player)) {
+                const playerName = player === 0 ? '您' : `玩家 ${player + 1}`;
+                
+                if (player === 0) {
+                    // 玩家胡牌：播放音效和特效
+                    soundSystem.playWinSound();
+                    fireworkSystem.celebrate();
+                    
+                    const lastTile = gameState.players[0][gameState.players[0].length - 1];
+                    setTimeout(() => {
+                        showIdiomExplanation(lastTile);
+                    }, 500);
+                    
+                    // 延遲顯示勝利消息
+                    setTimeout(() => {
+                        const message = document.createElement('div');
+                        message.className = 'message';
+                        message.style.fontSize = '24px';
+                        message.style.background = 'rgba(231, 76, 60, 0.95)';
+                        message.style.color = '#fff';
+                        message.style.padding = '30px';
+                        message.textContent = `🎉 ${playerName} 胡牌了！🎉`;
+                        document.body.appendChild(message);
+                        
+                        setTimeout(() => {
+                            if (document.body.contains(message)) {
+                                document.body.removeChild(message);
+                            }
+                        }, 4000);
+                    }, 1500);
+                } else {
+                    // AI 胡牌：只顯示消息
+                    const message = document.createElement('div');
+                    message.className = 'message';
+                    message.style.fontSize = '20px';
+                    message.style.background = 'rgba(52, 152, 219, 0.9)';
+                    message.style.color = '#fff';
+                    message.style.padding = '25px';
+                    message.textContent = `🎉 ${playerName} 胡牌了！🎉`;
+                    document.body.appendChild(message);
+                    
+                    setTimeout(() => {
+                        if (document.body.contains(message)) {
+                            document.body.removeChild(message);
+                        }
+                    }, 3000);
+                }
+                
+                gameState.phase = 'game-over';
+                return true;
+            }
+            return false;
+        }
+        function skipAction() {
+            gameState.phase = 'normal';
+            // 下一位玩家
+            gameState.currentPlayer = (gameState.lastDiscardedPlayer + 1) % 4;
+            updateDisplay();
+            
+            // AI 自動進行
+            if (gameState.currentPlayer !== 0) {
+                setTimeout(() => {
+                    aiPlay();
+                }, 1000);
+            }
+        }
+
+        // 顯示消息
+        function showMessage(text) {
+            const message = document.createElement('div');
+            message.className = 'message';
+            message.textContent = text;
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                document.body.removeChild(message);
+            }, 2000);
+        }
+
+        // 選擇牌
+        function selectTile(player, index) {
+            if (player !== gameState.currentPlayer || player !== 0 || gameState.phase !== 'normal') return;
+            
+            document.querySelectorAll('.tile.selected').forEach(tile => {
+                tile.classList.remove('selected');
+            });
+            
+            const tileElements = document.getElementById(`hand-${player}`).children;
+            if (tileElements[index]) {
+                tileElements[index].classList.add('selected');
+                gameState.selectedTile = index;
+            }
+            
+            updateDisplay();
+        }
+
+        // 打牌
+        function discardSelected() {
+            if (gameState.selectedTile === null || gameState.currentPlayer !== 0 || gameState.phase !== 'normal') return;
+            
+            // 播放打牌音效
+            soundSystem.playDiscardSound();
+            
+            const tile = gameState.players[0].splice(gameState.selectedTile, 1)[0];
+            gameState.discardedTiles.push(tile);
+            gameState.selectedTile = null;
+            
+            // 顯示打出牌的成語解釋
+            showIdiomExplanation(tile);
+            
+            // 檢查其他玩家是否有動作
+            if (!checkActions(tile, 0)) {
+                // 沒有動作，正常進行下一位
+                nextPlayer();
+            }
+            
+            updateDisplay();
+        }
+
+        // 抓牌
+        function drawTile() {
+            if (gameState.remainingTiles.length === 0 || gameState.currentPlayer !== 0 || gameState.phase !== 'normal') return;
+            
+            // 播放抓牌音效
+            soundSystem.playDrawSound();
+            
+            const tile = gameState.remainingTiles.pop();
+            gameState.players[0].push(tile);
+            sortHand(0);
+            
+            // 顯示抓到牌的成語解釋
+            showIdiomExplanation(tile);
+            
+            // 檢查是否胡牌
+            if (autoCheckWin(0)) return;
+            
+            updateDisplay();
+        }
+
+        // 下一位玩家
+        function nextPlayer() {
+            gameState.currentPlayer = (gameState.currentPlayer + 1) % 4;
+            
+            if (gameState.currentPlayer !== 0) {
+                setTimeout(() => {
+                    aiPlay();
+                }, 1000);
+            }
+        }
+
+        // AI 玩家邏輯
+        function aiPlay() {
+            const player = gameState.currentPlayer;
+            
+            // AI 抓牌
+            if (gameState.remainingTiles.length > 0) {
+                const tile = gameState.remainingTiles.pop();
+                gameState.players[player].push(tile);
+            }
+            
+            // AI 打牌
+            if (gameState.players[player].length > 0) {
+                const randomIndex = Math.floor(Math.random() * gameState.players[player].length);
+                const discardedTile = gameState.players[player].splice(randomIndex, 1)[0];
+                gameState.discardedTiles.push(discardedTile);
+                
+                // 檢查玩家是否有動作
+                if (!checkActions(discardedTile, player)) {
+                    nextPlayer();
+                }
+            } else {
+                nextPlayer();
+            }
+            
+            updateDisplay();
+        }
+
+        // 創建骰子點數
+        function createDiceDots(number) {
+            const patterns = {
+                1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 
+                5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8]
+            };
+            
+            const dotsContainer = document.createElement('div');
+            dotsContainer.className = 'dice-dots';
+            
+            for (let i = 0; i < 9; i++) {
+                const dot = document.createElement('div');
+                if (patterns[number].includes(i)) {
+                    dot.className = 'dot';
+                }
+                dotsContainer.appendChild(dot);
+            }
+            
+            return dotsContainer;
+        }
+
+        // 擲骰子
+        function rollDice() {
+            // 播放擲骰子音效
+            soundSystem.playDiceSound();
+            
+            const dice1 = Math.floor(Math.random() * 6) + 1;
+            const dice2 = Math.floor(Math.random() * 6) + 1;
+            
+            document.getElementById('dice1-dots').replaceWith(createDiceDots(dice1));
+            document.getElementById('dice2-dots').replaceWith(createDiceDots(dice2));
+            
+            setTimeout(() => {
+                const dice1Element = document.querySelector('#dice1 .dice-dots');
+                const dice2Element = document.querySelector('#dice2 .dice-dots');
+                if (dice1Element) dice1Element.id = 'dice1-dots';
+                if (dice2Element) dice2Element.id = 'dice2-dots';
+            }, 100);
+        }
+
+        // 新局
+        function newGame() {
+            // 播放新局音效
+            soundSystem.playNewGameSound();
+            
+            gameState.currentPlayer = 0;
+            gameState.discardedTiles = [];
+            gameState.selectedTile = null;
+            gameState.phase = 'normal';
+            gameState.lastDiscardedTile = null;
+            gameState.lastDiscardedPlayer = null;
+            gameState.waitingPlayer = null;
+            gameState.availableActions = [];
+            
+            initializeTiles();
+            dealTiles();
+            rollDice();
+        }
+
+        // 鍵盤事件
+        document.addEventListener('keydown', (event) => {
+            if (event.key === ' ') {
+                event.preventDefault();
+                if (gameState.selectedTile !== null) {
+                    discardSelected();
+                }
+            } else if (event.key === 'd' || event.key === 'D') {
+                drawTile();
+            }
+        });
+
+        // 初始化音頻上下文（需要用戶交互）
+        document.addEventListener('click', function initAudio() {
+            if (soundSystem.audioContext && soundSystem.audioContext.state === 'suspended') {
+                soundSystem.audioContext.resume();
+            }
+            document.removeEventListener('click', initAudio);
+        });
+
+        // 初始化遊戲
+        newGame();
+    </script>
+</body>
+</html>

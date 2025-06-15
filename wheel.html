@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學生抽籤轉盤</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f9ff;
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 0 auto;
+        }
+        
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            transition: transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            transform: rotate(0deg);
+        }
+        
+        .wheel-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .name-text {
+            position: absolute;
+            color: white;
+            font-weight: 500;
+            font-size: 16px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            transform-origin: center;
+            letter-spacing: 1px;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        
+        .spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+        
+        .pointer {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 30px solid #ff4757;
+            z-index: 5;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+        }
+
+        .sound-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .volume-slider {
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex flex-col items-center py-8 px-4">
+        <h1 class="text-3xl font-bold text-blue-800 mb-6">學生抽籤轉盤</h1>
+        
+        <div class="bg-white rounded-xl p-6 shadow-lg w-full max-w-2xl mb-8">
+            <div class="sound-controls">
+                <label class="text-gray-700 font-medium">音效：</label>
+                <button id="soundToggle" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors">
+                    開啟
+                </button>
+                <label class="text-gray-700 text-sm">音量：</label>
+                <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="50">
+            </div>
+            
+            <div class="mb-6">
+                <label for="studentNames" class="block text-gray-700 font-medium mb-2">輸入學生姓名（每行一個名字）</label>
+                <textarea id="studentNames" rows="5" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="王小明&#10;李小華&#10;張小美"></textarea>
+            </div>
+            
+            <div class="flex flex-wrap gap-3 mb-6">
+                <button id="addStudentsBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    新增學生
+                </button>
+                <button id="clearBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    清空名單
+                </button>
+                <button id="resetBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    重置抽籤
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-800 mb-2">待抽取名單 (<span id="availableCount">0</span>人)</h3>
+                    <div id="availableList" class="text-sm text-blue-700 min-h-[40px] overflow-y-auto max-h-32"></div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-green-800 mb-2">已抽中名單 (<span id="selectedCount">0</span>人)</h3>
+                    <div id="selectedList" class="text-sm text-green-700 min-h-[40px] overflow-y-auto max-h-32"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="wheel-container mb-8">
+            <div class="pointer"></div>
+            <div class="wheel" id="wheel">
+                <svg width="400" height="400" viewBox="0 0 400 400" id="wheelSVG">
+                    <circle cx="200" cy="200" r="200" fill="none" stroke="#ccc" stroke-width="1" />
+                </svg>
+            </div>
+            <div class="spinner" id="spinner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl p-6 shadow-lg w-full max-w-2xl">
+            <h2 class="text-xl font-bold text-center mb-4">抽籤結果</h2>
+            <div id="result" class="text-center text-2xl font-bold text-blue-700 h-12 flex items-center justify-center">
+                請點擊轉盤中央按鈕開始抽籤
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA62B', '#A78BFA', 
+            '#C70D3A', '#512B58', '#2A7B9B', '#3A8FB7', '#6A0572',
+            '#6F42C1', '#20639B', '#ED553B', '#F6D55C', '#3CAEA3'
+        ];
+        
+        let students = ['王小明', '李小華', '張小美', '陳大同', '林小玲'];
+        let availableStudents = [...students]; // 可抽取的學生名單
+        let selectedStudents = []; // 已抽中的學生名單
+        let isSpinning = false;
+        let currentRotation = 0;
+        let soundEnabled = true;
+        let volume = 0.5;
+        let audioContext;
+        let spinningSound;
+        
+        const wheel = document.getElementById('wheel');
+        const wheelSVG = document.getElementById('wheelSVG');
+        const spinner = document.getElementById('spinner');
+        const result = document.getElementById('result');
+        const studentNames = document.getElementById('studentNames');
+        const addStudentsBtn = document.getElementById('addStudentsBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const soundToggle = document.getElementById('soundToggle');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const availableList = document.getElementById('availableList');
+        const selectedList = document.getElementById('selectedList');
+        const availableCount = document.getElementById('availableCount');
+        const selectedCount = document.getElementById('selectedCount');
+
+        // 初始化音頻上下文
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // 創建轉盤旋轉音效
+        function createSpinningSound() {
+            if (!audioContext || !soundEnabled) return null;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // 設置低頻震動聲音
+            oscillator.frequency.setValueAtTime(50, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 5);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(400, audioContext.currentTime);
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(volume * 0.3, audioContext.currentTime + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 5);
+            
+            oscillator.type = 'sawtooth';
+            
+            return { oscillator, gainNode };
+        }
+
+        // 創建慶祝音效
+        function createCelebrationSound() {
+            if (!audioContext || !soundEnabled) return;
+            
+            // 創建多個音調的慶祝聲
+            const frequencies = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, C
+            const duration = 0.15;
+            
+            frequencies.forEach((freq, index) => {
+                setTimeout(() => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(volume * 0.5, audioContext.currentTime + 0.01);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration);
+                }, index * 100);
+            });
+            
+            // 添加鈴鐺效果
+            setTimeout(() => {
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(1500 + Math.random() * 500, audioContext.currentTime);
+                        oscillator.type = 'sine';
+                        
+                        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                        gainNode.gain.linearRampToValueAtTime(volume * 0.3, audioContext.currentTime + 0.01);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+                        
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + 0.1);
+                    }, i * 50);
+                }
+            }, 600);
+        }
+
+        // 音效控制
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            soundToggle.textContent = soundEnabled ? '開啟' : '關閉';
+            soundToggle.className = soundEnabled ? 
+                'bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors' :
+                'bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors';
+        }
+
+        function updateVolume() {
+            volume = volumeSlider.value / 100;
+        }
+        
+        // 更新名單顯示
+        function updateStudentLists() {
+            // 更新待抽取名單
+            availableList.textContent = availableStudents.length > 0 ? 
+                availableStudents.join('、') : '無';
+            availableCount.textContent = availableStudents.length;
+            
+            // 更新已抽中名單
+            selectedList.textContent = selectedStudents.length > 0 ? 
+                selectedStudents.join('、') : '無';
+            selectedCount.textContent = selectedStudents.length;
+        }
+        
+        // 初始化轉盤
+        function initWheel() {
+            // 清空SVG內容，只保留外圈圓形
+            while (wheelSVG.firstChild) {
+                wheelSVG.removeChild(wheelSVG.firstChild);
+            }
+            
+            // 移除所有名字文本
+            const nameTexts = document.querySelectorAll('.name-text');
+            nameTexts.forEach(text => text.remove());
+            
+            if (availableStudents.length === 0) {
+                if (students.length === 0) {
+                    result.textContent = '請先新增學生名單';
+                } else {
+                    result.textContent = '所有學生都已被抽中！請點擊重置抽籤';
+                }
+                return;
+            }
+            
+            const sectionAngle = 360 / availableStudents.length;
+            const radius = 200;
+            const centerX = 200;
+            const centerY = 200;
+            
+            availableStudents.forEach((student, index) => {
+                // 計算扇形的起始和結束角度
+                const startAngle = index * sectionAngle;
+                const endAngle = (index + 1) * sectionAngle;
+                
+                // 計算扇形的路徑
+                const startRad = (startAngle - 90) * Math.PI / 180;
+                const endRad = (endAngle - 90) * Math.PI / 180;
+                
+                const x1 = centerX + radius * Math.cos(startRad);
+                const y1 = centerY + radius * Math.sin(startRad);
+                const x2 = centerX + radius * Math.cos(endRad);
+                const y2 = centerY + radius * Math.sin(endRad);
+                
+                // 創建扇形路徑
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
+                
+                const d = [
+                    `M ${centerX},${centerY}`,
+                    `L ${x1},${y1}`,
+                    `A ${radius},${radius} 0 ${largeArcFlag},1 ${x2},${y2}`,
+                    'Z'
+                ].join(' ');
+                
+                path.setAttribute('d', d);
+                path.setAttribute('fill', colors[index % colors.length]);
+                path.setAttribute('stroke', '#fff');
+                path.setAttribute('stroke-width', '1');
+                
+                wheelSVG.appendChild(path);
+                
+                // 創建名字文本
+                const nameText = document.createElement('div');
+                nameText.className = 'name-text';
+                nameText.textContent = student;
+                
+                // 計算名字位置 - 放在扇形中間位置
+                const midAngle = startAngle + sectionAngle / 2;
+                const midRad = (midAngle - 90) * Math.PI / 180;
+                const textDistance = radius * 0.7; // 距離中心點的距離
+                
+                const textX = centerX + textDistance * Math.cos(midRad);
+                const textY = centerY + textDistance * Math.sin(midRad);
+                
+                nameText.style.left = `${textX}px`;
+                nameText.style.top = `${textY}px`;
+                
+                // 簡單計算：讓文字從圓周指向圓心
+                // 文字方向 = 扇形中點角度 - 90度（讓文字沿著半徑方向指向圓心）
+                const rotationAngle = midAngle - 90;
+                
+                nameText.style.transform = `translate(-50%, -50%) rotate(${rotationAngle}deg)`;
+                
+                wheel.appendChild(nameText);
+            });
+        }
+        
+        // 旋轉轉盤
+        function spinWheel() {
+            if (isSpinning || availableStudents.length === 0) return;
+            
+            // 初始化音頻（需要用戶交互）
+            initAudioContext();
+            
+            isSpinning = true;
+            result.textContent = '抽籤中...';
+            
+            // 播放旋轉音效
+            if (soundEnabled && audioContext) {
+                spinningSound = createSpinningSound();
+                if (spinningSound) {
+                    spinningSound.oscillator.start(audioContext.currentTime);
+                    spinningSound.oscillator.stop(audioContext.currentTime + 5);
+                }
+            }
+            
+            // 計算旋轉角度 - 增加更多隨機性
+            // 隨機旋轉圈數：5-12圈
+            const randomSpins = Math.floor(Math.random() * 8) + 5; // 5到12圈
+            // 隨機角度：0-359度，但要避免太接近當前位置
+            let randomAngle = Math.floor(Math.random() * 360);
+            
+            // 為了避免連續抽到相同的人，確保最終角度有足夠的變化
+            const currentNormalizedAngle = currentRotation % 360;
+            const minAngleChange = 45; // 最小角度變化
+            
+            // 如果隨機角度與當前角度太接近，就調整它
+            if (Math.abs(randomAngle - currentNormalizedAngle) < minAngleChange) {
+                randomAngle = (randomAngle + 180) % 360; // 加180度確保有足夠變化
+            }
+            
+            const spinAngle = randomSpins * 360 + randomAngle;
+            currentRotation += spinAngle;
+            
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+            
+            setTimeout(() => {
+                const sectionAngle = 360 / availableStudents.length;
+                // 計算指針指向的區塊 (指針在頂部，所以不需要額外調整)
+                const normalizedRotation = currentRotation % 360;
+                // 修正計算方式，確保指針指向的區塊與結果一致
+                const winningIndex = availableStudents.length - 1 - Math.floor(normalizedRotation / sectionAngle);
+                const winner = availableStudents[winningIndex % availableStudents.length];
+                
+                // 將抽中的人從待抽取名單移除，加入已抽中名單
+                const winnerIndexInAvailable = availableStudents.indexOf(winner);
+                if (winnerIndexInAvailable !== -1) {
+                    availableStudents.splice(winnerIndexInAvailable, 1);
+                    selectedStudents.push(winner);
+                }
+                
+                result.textContent = `恭喜 ${winner} 被選中！`;
+                
+                // 播放慶祝音效
+                if (soundEnabled && audioContext) {
+                    createCelebrationSound();
+                }
+                
+                createConfetti();
+                
+                // 更新名單顯示
+                updateStudentLists();
+                
+                // 重新初始化轉盤（移除已抽中的人）
+                setTimeout(() => {
+                    initWheel();
+                }, 1000);
+                
+                isSpinning = false;
+            }, 5000);
+        }
+        
+        // 新增學生
+        function addStudents() {
+            const names = studentNames.value.trim().split('\n').filter(name => name.trim() !== '');
+            
+            if (names.length > 0) {
+                students = names;
+                availableStudents = [...students];
+                selectedStudents = [];
+                initWheel();
+                updateStudentLists();
+                studentNames.value = students.join('\n');
+                result.textContent = '請點擊轉盤中央按鈕開始抽籤';
+            }
+        }
+        
+        // 清空名單
+        function clearStudentList() {
+            students = [];
+            availableStudents = [];
+            selectedStudents = [];
+            studentNames.value = '';
+            initWheel();
+            updateStudentLists();
+            result.textContent = '請先新增學生名單';
+        }
+        
+        // 重置抽籤
+        function resetLottery() {
+            availableStudents = [...students];
+            selectedStudents = [];
+            initWheel();
+            updateStudentLists();
+            result.textContent = '請點擊轉盤中央按鈕開始抽籤';
+        }
+        
+        // 創建慶祝效果
+        function createConfetti() {
+            const container = document.querySelector('.wheel-container');
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 400 + 'px';
+                confetti.style.top = Math.random() * 200 + 'px';
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 10 + 5 + 'px';
+                container.appendChild(confetti);
+                
+                // 動畫
+                setTimeout(() => {
+                    confetti.style.opacity = '1';
+                    confetti.style.transform = `translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 + 100}px) rotate(${Math.random() * 360}deg)`;
+                    confetti.style.transition = 'all 1s ease-out';
+                    
+                    setTimeout(() => {
+                        confetti.style.opacity = '0';
+                        setTimeout(() => {
+                            confetti.remove();
+                        }, 1000);
+                    }, 1000);
+                }, Math.random() * 500);
+            }
+        }
+        
+        // 事件監聽
+        spinner.addEventListener('click', spinWheel);
+        addStudentsBtn.addEventListener('click', addStudents);
+        clearBtn.addEventListener('click', clearStudentList);
+        resetBtn.addEventListener('click', resetLottery);
+        soundToggle.addEventListener('click', toggleSound);
+        volumeSlider.addEventListener('input', updateVolume);
+        
+        // 初始化
+        studentNames.value = students.join('\n');
+        availableStudents = [...students];
+        initWheel();
+        updateStudentLists();
+    </script>
+</body>
+</html>

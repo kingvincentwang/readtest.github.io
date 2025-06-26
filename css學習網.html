@@ -1,0 +1,5166 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS 學習中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f4f8;
+        }
+        
+        .code-editor {
+            height: 300px;
+            font-family: monospace;
+            resize: none;
+            tab-size: 2;
+        }
+        
+        .preview-box {
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            height: 300px;
+            overflow: auto;
+        }
+        
+        .lesson-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .lesson-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-button {
+            position: relative;
+        }
+        
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #3b82f6;
+            border-radius: 3px;
+        }
+
+        /* 範例庫內容樣式 */
+        .example-content {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .example-container {
+            background-color: white;
+            margin: 50px auto;
+            max-width: 800px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .close-btn:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* 課程內容樣式 */
+        .lesson-content {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .lesson-container {
+            background-color: white;
+            margin: 50px auto;
+            max-width: 800px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        /* 行動選單 */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+
+        .mobile-menu-container {
+            background-color: white;
+            width: 80%;
+            height: 100%;
+            max-width: 300px;
+            padding: 20px;
+        }
+
+        /* 動畫效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes scale {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .scale-animation {
+            animation: scale 2s ease infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- 導航欄 -->
+    <nav class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                <h1 class="text-2xl font-bold">CSS 學習中心</h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#" class="hover:text-blue-200 transition" onclick="scrollToTop(); return false;">首頁</a>
+                <a href="#" class="hover:text-blue-200 transition" onclick="switchTab('lessons'); return false;">課程</a>
+                <a href="#" class="hover:text-blue-200 transition" onclick="switchTab('examples'); return false;">範例</a>
+                <a href="#" class="hover:text-blue-200 transition" onclick="showAboutUs(); return false;">關於我們</a>
+            </div>
+            <button class="md:hidden focus:outline-none" onclick="toggleMobileMenu()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 行動選單 -->
+    <div id="mobile-menu" class="mobile-menu">
+        <div class="mobile-menu-container">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">選單</h2>
+                <button class="focus:outline-none" onclick="toggleMobileMenu()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="flex flex-col space-y-4">
+                <a href="#" class="py-2 hover:text-blue-600 transition" onclick="scrollToTop(); toggleMobileMenu(); return false;">首頁</a>
+                <a href="#" class="py-2 hover:text-blue-600 transition" onclick="switchTab('lessons'); toggleMobileMenu(); return false;">課程</a>
+                <a href="#" class="py-2 hover:text-blue-600 transition" onclick="switchTab('examples'); toggleMobileMenu(); return false;">範例</a>
+                <a href="#" class="py-2 hover:text-blue-600 transition" onclick="showAboutUs(); toggleMobileMenu(); return false;">關於我們</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 英雄區塊 -->
+    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-16">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">掌握 CSS 的力量</h1>
+            <p class="text-xl md:text-2xl mb-8">透過互動式學習和即時練習，成為 CSS 專家</p>
+            <button class="bg-white text-blue-600 font-bold py-3 px-8 rounded-full hover:bg-blue-50 transition shadow-lg" onclick="switchTab('editor')">
+                開始學習
+            </button>
+        </div>
+    </div>
+
+    <!-- 主要內容 -->
+    <div class="container mx-auto px-4 py-12">
+        <!-- 標籤頁 -->
+        <div class="mb-12">
+            <div class="flex border-b border-gray-200 mb-10">
+                <button class="tab-button active px-6 py-3 font-medium text-lg" data-tab="editor" onclick="switchTab('editor')">
+                    所見即所得編輯器
+                </button>
+                <button class="tab-button px-6 py-3 font-medium text-lg" data-tab="lessons" onclick="switchTab('lessons')">
+                    CSS 課程
+                </button>
+                <button class="tab-button px-6 py-3 font-medium text-lg" data-tab="examples" onclick="switchTab('examples')">
+                    範例庫
+                </button>
+            </div>
+
+            <!-- 編輯器標籤內容 -->
+            <div id="editor" class="tab-content active">
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800">CSS 即時編輯器</h2>
+                    <p class="mb-6 text-gray-600">在下方編輯 CSS，並在右側即時查看結果。試試修改顏色、大小或其他屬性！</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-medium mb-2 text-gray-700">HTML (固定)</h3>
+                            <div class="bg-gray-100 p-4 rounded-lg mb-4 text-sm overflow-auto h-40">
+                                <pre class="text-gray-800">&lt;div class="demo-box"&gt;
+  &lt;h2&gt;CSS 示範&lt;/h2&gt;
+  &lt;p&gt;這是一個段落文字。&lt;/p&gt;
+  &lt;button&gt;點擊我&lt;/button&gt;
+&lt;/div&gt;</pre>
+                            </div>
+                            
+                            <h3 class="text-lg font-medium mb-2 text-gray-700">CSS (可編輯)</h3>
+                            <textarea id="css-code" class="code-editor w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4">.demo-box {
+  background-color: #f0f4ff;
+  padding: 20px;
+  border-radius: 8px;
+  border: 2px solid #3b82f6;
+}
+
+.demo-box h2 {
+  color: #1e40af;
+  margin-bottom: 10px;
+}
+
+.demo-box p {
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.demo-box button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.demo-box button:hover {
+  background-color: #2563eb;
+}</textarea>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-medium mb-2 text-gray-700">預覽</h3>
+                            <div class="preview-box rounded-lg p-4">
+                                <style id="preview-style"></style>
+                                <div class="demo-box">
+                                    <h2>CSS 示範</h2>
+                                    <p>這是一個段落文字。</p>
+                                    <button id="demo-button">點擊我</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CSS 動畫編輯器 -->
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">CSS 動畫編輯器</h2>
+                    <p class="text-gray-600 mb-6">輸入自定義的 @keyframes 與動畫屬性，即可即時預覽動畫效果。</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-medium mb-2 text-gray-700">CSS 動畫程式碼</h3>
+                            <textarea id="animation-css" class="code-editor w-full p-4 border border-gray-300 rounded-lg mb-4" rows="12">@keyframes wiggle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  75% { transform: rotate(-5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.animated-box {
+  animation: wiggle 1s infinite;
+}</textarea>
+                            <button onclick="updateAnimationPreview()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">套用動畫</button>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-medium mb-2 text-gray-700">預覽區</h3>
+                            <style id="animation-preview-style"></style>
+                            <div class="preview-box flex items-center justify-center">
+                                <div id="animated-box" class="animated-box bg-indigo-500 text-white p-6 rounded-lg shadow-lg">
+                                    動畫盒子
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">CSS 屬性參考</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition cursor-pointer" onclick="showPropertyDetails('colors')">
+                            <h3 class="font-bold text-blue-600">顏色與背景</h3>
+                            <ul class="mt-2 space-y-1 text-sm text-gray-700">
+                                <li>color: 文字顏色</li>
+                                <li>background-color: 背景顏色</li>
+                                <li>background-image: 背景圖片</li>
+                            </ul>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition cursor-pointer" onclick="showPropertyDetails('text')">
+                            <h3 class="font-bold text-blue-600">文字樣式</h3>
+                            <ul class="mt-2 space-y-1 text-sm text-gray-700">
+                                <li>font-size: 字體大小</li>
+                                <li>font-weight: 字體粗細</li>
+                                <li>text-align: 文字對齊</li>
+                            </ul>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition cursor-pointer" onclick="showPropertyDetails('borders')">
+                            <h3 class="font-bold text-blue-600">邊框與圓角</h3>
+                            <ul class="mt-2 space-y-1 text-sm text-gray-700">
+                                <li>border: 邊框</li>
+                                <li>border-radius: 圓角</li>
+                                <li>box-shadow: 陰影</li>
+                            </ul>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition cursor-pointer" onclick="showPropertyDetails('spacing')">
+                            <h3 class="font-bold text-blue-600">間距與大小</h3>
+                            <ul class="mt-2 space-y-1 text-sm text-gray-700">
+                                <li>margin: 外邊距</li>
+                                <li>padding: 內邊距</li>
+                                <li>width/height: 寬度/高度</li>
+                            </ul>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition cursor-pointer" onclick="showPropertyDetails('flexbox')">
+                            <h3 class="font-bold text-blue-600">彈性盒子</h3>
+                            <ul class="mt-2 space-y-1 text-sm text-gray-700">
+                                <li>display: flex</li>
+                                <li>justify-content: 主軸對齊</li>
+                                <li>align-items: 交叉軸對齊</li>
+                            </ul>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition cursor-pointer" onclick="showPropertyDetails('animations')">
+                            <h3 class="font-bold text-blue-600">動畫與過渡</h3>
+                            <ul class="mt-2 space-y-1 text-sm text-gray-700">
+                                <li>transition: 過渡效果</li>
+                                <li>animation: 動畫</li>
+                                <li>transform: 變形</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 課程標籤內容 -->
+            <div id="lessons" class="tab-content">
+                <h2 class="text-3xl font-bold mb-8 text-center text-gray-800">CSS 學習課程</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="lesson-card bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-3 bg-blue-500"></div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-500 rounded-full mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">CSS 基礎入門</h3>
+                            <p class="text-gray-600 mb-4">學習 CSS 選擇器、顏色、文字樣式和基本盒模型。適合完全初學者。</p>
+                            <div class="flex items-center text-sm text-gray-500 mb-4">
+                                <span class="mr-4">✓ 10 個課時</span>
+                                <span>⏱️ 2 小時</span>
+                            </div>
+                            <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition" onclick="showLesson('basics')">
+                                開始學習
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="lesson-card bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-3 bg-green-500"></div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-center w-12 h-12 bg-green-100 text-green-500 rounded-full mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">CSS 佈局技巧</h3>
+                            <p class="text-gray-600 mb-4">掌握 Flexbox、Grid 和響應式設計，創建現代化的網頁佈局。</p>
+                            <div class="flex items-center text-sm text-gray-500 mb-4">
+                                <span class="mr-4">✓ 12 個課時</span>
+                                <span>⏱️ 3 小時</span>
+                            </div>
+                            <button class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition" onclick="showLesson('layout')">
+                                開始學習
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="lesson-card bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-3 bg-purple-500"></div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-center w-12 h-12 bg-purple-100 text-purple-500 rounded-full mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">CSS 動畫與特效</h3>
+                            <p class="text-gray-600 mb-4">學習創建吸引人的動畫、過渡效果和互動元素，提升用戶體驗。</p>
+                            <div class="flex items-center text-sm text-gray-500 mb-4">
+                                <span class="mr-4">✓ 8 個課時</span>
+                                <span>⏱️ 2.5 小時</span>
+                            </div>
+                            <button class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition" onclick="showLesson('animation')">
+                                開始學習
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="lesson-card bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-3 bg-yellow-500"></div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-center w-12 h-12 bg-yellow-100 text-yellow-500 rounded-full mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">響應式網頁設計</h3>
+                            <p class="text-gray-600 mb-4">學習如何讓網站在各種設備上都能完美顯示，從手機到桌面電腦。</p>
+                            <div class="flex items-center text-sm text-gray-500 mb-4">
+                                <span class="mr-4">✓ 9 個課時</span>
+                                <span>⏱️ 2.5 小時</span>
+                            </div>
+                            <button class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition" onclick="showLesson('responsive')">
+                                開始學習
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="lesson-card bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-3 bg-red-500"></div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-center w-12 h-12 bg-red-100 text-red-500 rounded-full mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">CSS 預處理器</h3>
+                            <p class="text-gray-600 mb-4">學習 Sass 和 Less，提高 CSS 的可維護性和開發效率。</p>
+                            <div class="flex items-center text-sm text-gray-500 mb-4">
+                                <span class="mr-4">✓ 7 個課時</span>
+                                <span>⏱️ 2 小時</span>
+                            </div>
+                            <button class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition" onclick="showLesson('preprocessors')">
+                                開始學習
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="lesson-card bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-3 bg-indigo-500"></div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-center w-12 h-12 bg-indigo-100 text-indigo-500 rounded-full mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">CSS 最佳實踐</h3>
+                            <p class="text-gray-600 mb-4">學習 CSS 架構、命名規範和優化技巧，編寫高質量的 CSS 代碼。</p>
+                            <div class="flex items-center text-sm text-gray-500 mb-4">
+                                <span class="mr-4">✓ 6 個課時</span>
+                                <span>⏱️ 1.5 小時</span>
+                            </div>
+                            <button class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-lg transition" onclick="showLesson('bestpractices')">
+                                開始學習
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 範例標籤內容 -->
+            <div id="examples" class="tab-content">
+                <h2 class="text-3xl font-bold mb-8 text-center text-gray-800">CSS 範例庫</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-40 bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center">
+                            <div class="w-16 h-16 bg-white rounded-lg shadow-lg flex items-center justify-center transform rotate-45">
+                                <div class="transform -rotate-45 text-blue-500 font-bold text-xl">按鈕</div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2">精美按鈕樣式</h3>
+                            <p class="text-gray-600 mb-4">10+ 種不同風格的按鈕設計，包含懸停和點擊效果。</p>
+                            <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition" onclick="showExample('buttons')">
+                                查看範例
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-40 bg-gradient-to-r from-green-400 to-teal-500 flex items-center justify-center">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="w-12 h-12 bg-white rounded-md shadow"></div>
+                                <div class="w-12 h-12 bg-white rounded-md shadow"></div>
+                                <div class="w-12 h-12 bg-white rounded-md shadow"></div>
+                                <div class="w-12 h-12 bg-white rounded-md shadow"></div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2">卡片佈局</h3>
+                            <p class="text-gray-600 mb-4">各種卡片設計和網格佈局，適用於產品展示和內容呈現。</p>
+                            <button class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition" onclick="showExample('cards')">
+                                查看範例
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-40 bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center">
+                            <div class="relative w-20 h-20">
+                                <div class="absolute w-full h-full bg-white rounded-full opacity-25 animate-ping"></div>
+                                <div class="relative w-full h-full bg-white rounded-full flex items-center justify-center">
+                                    <span class="text-purple-500 font-bold">動畫</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2">CSS 動畫效果</h3>
+                            <p class="text-gray-600 mb-4">各種加載動畫、過渡效果和互動元素，提升用戶體驗。</p>
+                            <button class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition" onclick="showExample('animations')">
+                                查看範例
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-40 bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center">
+                            <div class="flex flex-col items-center">
+                                <div class="w-24 h-6 bg-white rounded-t-lg"></div>
+                                <div class="w-24 h-24 bg-white border-t-0"></div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2">導航與標籤頁</h3>
+                            <p class="text-gray-600 mb-4">各種導航欄、標籤頁和菜單設計，提升網站的可用性。</p>
+                            <button class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg transition" onclick="showExample('navigation')">
+                                查看範例
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-40 bg-gradient-to-r from-red-400 to-rose-500 flex items-center justify-center">
+                            <div class="w-24 h-24 rounded-full bg-white flex items-center justify-center">
+                                <div class="w-16 h-16 rounded-full bg-red-500"></div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2">表單樣式</h3>
+                            <p class="text-gray-600 mb-4">美觀且用戶友好的表單元素設計，包含驗證和反饋效果。</p>
+                            <button class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition" onclick="showExample('forms')">
+                                查看範例
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="h-40 bg-gradient-to-r from-cyan-400 to-blue-500 flex items-center justify-center">
+                            <div class="flex space-x-2">
+                                <div class="w-4 h-16 bg-white rounded-full"></div>
+                                <div class="w-4 h-24 bg-white rounded-full"></div>
+                                <div class="w-4 h-12 bg-white rounded-full"></div>
+                                <div class="w-4 h-20 bg-white rounded-full"></div>
+                                <div class="w-4 h-16 bg-white rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2">響應式設計</h3>
+                            <p class="text-gray-600 mb-4">適應不同屏幕尺寸的佈局和組件，從手機到桌面電腦。</p>
+                            <button class="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-2 px-4 rounded-lg transition" onclick="showExample('responsive')">
+                                查看範例
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 範例內容彈出視窗 -->
+    <!-- 精美按鈕樣式 -->
+    <div id="example-buttons" class="example-content">
+        <div class="example-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closeExample('buttons')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">精美按鈕樣式範例</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <h3 class="text-lg font-medium mb-4">基本按鈕</h3>
+                    <div class="space-y-4">
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">基本按鈕</button>
+                        <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">圓角按鈕</button>
+                        <button class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-full">圓形按鈕</button>
+                    </div>
+                </div>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <h3 class="text-lg font-medium mb-4">輪廓按鈕</h3>
+                    <div class="space-y-4">
+                        <button class="border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white px-4 py-2 rounded transition">輪廓按鈕</button>
+                        <button class="border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white px-4 py-2 rounded-lg transition">圓角輪廓</button>
+                        <button class="border-2 border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white px-6 py-3 rounded-full transition">圓形輪廓</button>
+                    </div>
+                </div>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <h3 class="text-lg font-medium mb-4">帶圖標按鈕</h3>
+                    <div class="space-y-4">
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                            </svg>
+                            添加
+                        </button>
+                        <button class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                            刪除
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <h3 class="text-lg font-medium mb-4">特效按鈕</h3>
+                    <div class="space-y-4">
+                        <button class="relative bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded overflow-hidden transition-all duration-300 hover:pl-10">
+                            <span class="relative z-10">懸停效果</span>
+                            <span class="absolute left-0 top-0 h-full w-0 bg-blue-700 transition-all duration-300 hover:w-full"></span>
+                        </button>
+                        <button class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded shadow-lg hover:shadow-purple-500/50 transition-all duration-300 transform hover:-translate-y-1">
+                            懸浮效果
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-100 p-6 rounded-lg">
+                <h3 class="text-lg font-medium mb-4">按鈕 CSS 代碼</h3>
+                <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg overflow-auto text-sm">/* 基本按鈕 */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+/* 輪廓按鈕 */
+.btn-outline {
+  background-color: transparent;
+  border: 2px solid #3b82f6;
+  color: #3b82f6;
+}
+
+.btn-outline:hover {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* 圓形按鈕 */
+.btn-rounded {
+  border-radius: 9999px;
+  padding: 0.5rem 1.5rem;
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSS 卡片佈局 -->
+    <div id="example-cards" class="example-content">
+        <div class="example-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closeExample('cards')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">卡片佈局範例</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-40 bg-blue-500"></div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">基本卡片</h3>
+                        <p class="text-gray-600">這是一個基本的卡片設計，包含圖片區域和內容區域。</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-40 bg-green-500"></div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-2">產品卡片</h3>
+                        <p class="text-gray-600">適用於展示產品信息的卡片設計。</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="font-bold text-lg">$99</span>
+                            <button class="bg-green-500 text-white px-3 py-1 rounded">加入購物車</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-40 bg-purple-500"></div>
+                    <div class="p-4">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-gray-300 mr-3"></div>
+                            <div>
+                                <h4 class="font-medium">用戶名稱</h4>
+                                <p class="text-gray-500 text-sm">2023年5月10日</p>
+                            </div>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">文章卡片</h3>
+                        <p class="text-gray-600">適用於部落格文章或新聞的卡片設計。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-100 p-6 rounded-lg">
+                <h3 class="text-lg font-medium mb-4">卡片 CSS 代碼</h3>
+                <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg overflow-auto text-sm">/* 基本卡片 */
+.card {
+  background-color: white;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.card-image {
+  height: 10rem;
+  background-size: cover;
+  background-position: center;
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.card-text {
+  color: #4b5563;
+}
+
+/* 卡片懸停效果 */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSS 動畫效果 -->
+    <div id="example-animations" class="example-content">
+        <div class="example-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closeExample('animations')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">CSS 動畫效果範例</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-gray-100 p-6 rounded-lg flex flex-col items-center">
+                    <h3 class="text-lg font-medium mb-4">淡入淡出</h3>
+                    <div class="w-20 h-20 bg-blue-500 animate-pulse"></div>
+                </div>
+                <div class="bg-gray-100 p-6 rounded-lg flex flex-col items-center">
+                    <h3 class="text-lg font-medium mb-4">旋轉</h3>
+                    <div class="w-20 h-20 bg-green-500 animate-spin"></div>
+                </div>
+                <div class="bg-gray-100 p-6 rounded-lg flex flex-col items-center">
+                    <h3 class="text-lg font-medium mb-4">彈跳</h3>
+                    <div class="w-20 h-20 bg-purple-500 animate-bounce"></div>
+                </div>
+                <div class="bg-gray-100 p-6 rounded-lg flex flex-col items-center">
+                    <h3 class="text-lg font-medium mb-4">縮放</h3>
+                    <div class="w-20 h-20 bg-yellow-500 scale-animation"></div>
+                </div>
+            </div>
+            <div class="bg-gray-100 p-6 rounded-lg">
+                <h3 class="text-lg font-medium mb-4">動畫 CSS 代碼</h3>
+                <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg overflow-auto text-sm">/* 淡入淡出動畫 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 1s ease-in-out;
+}
+
+/* 旋轉動畫 */
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.rotate {
+  animation: rotate 2s linear infinite;
+}
+
+/* 彈跳動畫 */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.bounce {
+  animation: bounce 1s ease infinite;
+}
+
+/* 縮放動畫 */
+@keyframes scale {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.scale {
+  animation: scale 2s ease infinite;
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- 導覽與標籤頁 -->
+    <div id="example-navigation" class="example-content">
+        <div class="example-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closeExample('navigation')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">導覽與標籤頁範例</h2>
+            
+            <!-- 水平導覽列範例 -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold mb-4">1. 水平導覽列</h3>
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="font-semibold mb-3">基本導覽列</h4>
+                        <nav class="bg-gray-200 p-3 rounded flex gap-4">
+                            <a href="#" class="text-blue-600 font-bold px-3 py-1 rounded bg-blue-100">首頁</a>
+                            <a href="#" class="text-gray-600 hover:text-blue-500 px-3 py-1 rounded hover:bg-gray-100 transition">作品</a>
+                            <a href="#" class="text-gray-600 hover:text-blue-500 px-3 py-1 rounded hover:bg-gray-100 transition">關於</a>
+                            <a href="#" class="text-gray-600 hover:text-blue-500 px-3 py-1 rounded hover:bg-gray-100 transition">聯繫</a>
+                        </nav>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-3">深色導覽列</h4>
+                        <nav class="bg-gray-800 p-3 rounded flex gap-4">
+                            <a href="#" class="text-white font-bold px-3 py-1 rounded bg-blue-600">首頁</a>
+                            <a href="#" class="text-gray-300 hover:text-white px-3 py-1 rounded hover:bg-gray-700 transition">作品</a>
+                            <a href="#" class="text-gray-300 hover:text-white px-3 py-1 rounded hover:bg-gray-700 transition">關於</a>
+                            <a href="#" class="text-gray-300 hover:text-white px-3 py-1 rounded hover:bg-gray-700 transition">聯繫</a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 標籤頁範例 -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold mb-4">2. 標籤頁系統</h3>
+                <div class="mb-6">
+                    <h4 class="font-semibold mb-3">互動式標籤頁</h4>
+                    <div class="border rounded-lg overflow-hidden">
+                        <div class="flex bg-gray-50">
+                            <button class="nav-tab-btn active px-6 py-3 border-b-2 border-blue-600 bg-white text-blue-600 font-medium" data-tab="tab1">
+                                標籤一
+                            </button>
+                            <button class="nav-tab-btn px-6 py-3 border-b-2 border-transparent text-gray-600 hover:text-blue-500 transition" data-tab="tab2">
+                                標籤二
+                            </button>
+                            <button class="nav-tab-btn px-6 py-3 border-b-2 border-transparent text-gray-600 hover:text-blue-500 transition" data-tab="tab3">
+                                標籤三
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <div class="nav-tab-content active" id="tab1">
+                                <h5 class="font-bold mb-2">標籤一的內容</h5>
+                                <p class="text-gray-600">這是第一個標籤頁的內容。您可以在這裡放置任何內容。</p>
+                            </div>
+                            <div class="nav-tab-content hidden" id="tab2">
+                                <h5 class="font-bold mb-2">標籤二的內容</h5>
+                                <p class="text-gray-600">這是第二個標籤頁的內容。每個標籤都可以有不同的內容。</p>
+                            </div>
+                            <div class="nav-tab-content hidden" id="tab3">
+                                <h5 class="font-bold mb-2">標籤三的內容</h5>
+                                <p class="text-gray-600">這是第三個標籤頁的內容。您可以根據需要添加更多標籤。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 垂直導覽選單 -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold mb-4">3. 垂直導覽選單</h3>
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="font-semibold mb-3">側邊選單</h4>
+                        <nav class="bg-white border rounded-lg overflow-hidden w-48">
+                            <a href="#" class="block px-4 py-3 text-blue-600 bg-blue-50 border-r-2 border-blue-600 font-medium">首頁</a>
+                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition">產品介紹</a>
+                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition">服務項目</a>
+                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition">關於我們</a>
+                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition">聯繫我們</a>
+                        </nav>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-3">麵包屑導覽</h4>
+                        <nav class="flex items-center space-x-2 text-sm">
+                            <a href="#" class="text-blue-600 hover:underline">首頁</a>
+                            <span class="text-gray-400">/</span>
+                            <a href="#" class="text-blue-600 hover:underline">產品</a>
+                            <span class="text-gray-400">/</span>
+                            <a href="#" class="text-blue-600 hover:underline">分類</a>
+                            <span class="text-gray-400">/</span>
+                            <span class="text-gray-600">當前頁面</span>
+                        </nav>
+                        
+                        <div class="mt-6">
+                            <h4 class="font-semibold mb-3">按鈕式導覽</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded font-medium">全部</button>
+                                <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">前端</button>
+                                <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">後端</button>
+                                <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">設計</button>
+                                <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">其他</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CSS 程式碼範例 -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold mb-4">完整 CSS 程式碼</h3>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto">/* 基本導覽列樣式 */
+nav {
+  display: flex;
+  background-color: #f3f4f6;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  gap: 1rem;
+}
+
+nav a {
+  padding: 0.25rem 0.75rem;
+  text-decoration: none;
+  border-radius: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+nav a:hover {
+  background-color: #e5e7eb;
+  color: #2563eb;
+}
+
+nav a.active {
+  background-color: #dbeafe;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+/* 標籤頁樣式 */
+.tab-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.tab-buttons {
+  display: flex;
+  background-color: #f9fafb;
+}
+
+.tab-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  color: #2563eb;
+}
+
+.tab-button.active {
+  background-color: white;
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  font-weight: 500;
+}
+
+.tab-content {
+  padding: 1.5rem;
+}
+
+/* 垂直導覽選單 */
+.vertical-nav {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.vertical-nav a {
+  display: block;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: #374151;
+  transition: all 0.3s ease;
+}
+
+.vertical-nav a:hover {
+  background-color: #f9fafb;
+  color: #2563eb;
+}
+
+.vertical-nav a.active {
+  color: #2563eb;
+  background-color: #eff6ff;
+  border-right: 2px solid #2563eb;
+  font-weight: 500;
+}
+
+/* 麵包屑導覽 */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.breadcrumb a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb .separator {
+  color: #9ca3af;
+}
+
+.breadcrumb .current {
+  color: #4b5563;
+}</pre>
+            </div>
+
+            <!-- JavaScript 功能說明 -->
+            <div class="bg-blue-50 p-6 rounded-lg">
+                <h4 class="font-bold text-blue-800 mb-2">💡 互動功能說明</h4>
+                <p class="text-blue-700 mb-4">上方的標籤頁範例包含了完整的 JavaScript 互動功能：</p>
+                <ul class="list-disc pl-6 text-blue-700 space-y-1">
+                    <li>點擊標籤按鈕可以切換內容</li>
+                    <li>活動標籤會有視覺反饋</li>
+                    <li>平滑的過渡動畫效果</li>
+                    <li>響應式設計，適應不同裝置</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表單樣式 -->
+    <div id="example-forms" class="example-content">
+        <div class="example-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closeExample('forms')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">表單樣式範例</h2>
+            <div class="mb-6 space-y-4">
+                <label class="block">
+                    <span class="text-gray-700">姓名</span>
+                    <input type="text" class="mt-1 block w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </label>
+                <label class="block">
+                    <span class="text-gray-700">電子郵件</span>
+                    <input type="email" class="mt-1 block w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </label>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-2">CSS 程式碼</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto">input {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- 響應式設計 -->
+    <div id="example-responsive" class="example-content">
+        <div class="example-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closeExample('responsive')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">響應式設計範例</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="bg-blue-100 p-4 rounded text-center">區塊 A</div>
+                <div class="bg-blue-200 p-4 rounded text-center">區塊 B</div>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-2">CSS 程式碼</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto">@media (min-width: 768px) {
+  .grid-cols-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- 課程內容彈出視窗 -->
+    <!-- CSS學習課程--CSS 基礎入門 -->
+    <div id="lesson-basics" class="lesson-content">
+        <div class="lesson-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closeLesson('basics')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">CSS 基礎入門</h2>
+
+            <div class="lesson-section mb-8">
+                <h3 class="text-xl font-bold mb-4">課程大綱</h3>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li>CSS 簡介與基本語法</li>
+                    <li>選擇器與優先級</li>
+                    <li>顏色與背景</li>
+                    <li>文字樣式與排版</li>
+                    <li>盒模型：邊距、邊框與內邊距</li>
+                    <li>尺寸與單位</li>
+                    <li>顯示與定位</li>
+                    <li>浮動與清除</li>
+                    <li>基本佈局技巧</li>
+                    <li>CSS 重置與標準化</li>
+                </ul>
+            </div>
+
+            <div class="lesson-section mb-8" data-lesson="0">
+                <h3 class="text-xl font-bold mb-4">第1課：CSS 簡介與基本語法</h3>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <p class="mb-4">CSS（層疊樣式表）是用來控制網頁外觀的語言。它可以控制顏色、字體、間距、佈局等多種視覺效果。</p>
+
+                    <h4 class="font-bold mb-2">CSS 語法</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4 overflow-auto text-sm">selector {
+  property: value;
+  another-property: another-value;
+}</pre>
+
+                    <h4 class="font-bold mb-2">CSS 引入方式</h4>
+                    <ul class="list-disc pl-6 mb-4">
+                        <li>內聯樣式：直接在 HTML 元素中使用 style 屬性</li>
+                        <li>內部樣式表：在 HTML 文件的 &lt;head&gt; 使用 &lt;style&gt;</li>
+                        <li>外部樣式表：使用 &lt;link&gt; 引入 .css 文件</li>
+                    </ul>
+
+                    <h4 class="font-bold mb-2">實例</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h5 class="font-medium mb-2">HTML</h5>
+                            <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg overflow-auto text-sm">&lt;div class="box"&gt;
+  這是一個 CSS 示例
+&lt;/div&gt;</pre>
+                        </div>
+                        <div>
+                            <h5 class="font-medium mb-2">CSS</h5>
+                            <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg overflow-auto text-sm">.box {
+  background-color: #3b82f6;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}</pre>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-5 bg-blue-500 text-white rounded-lg text-center">
+                        這是一個 CSS 示例
+                    </div>
+                </div>
+            </div>
+
+            <div class="lesson-section mb-8" data-lesson="1" style="display: none;">
+                <h3 class="text-xl font-bold mb-4">第2課：選擇器與優先級</h3>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <p class="mb-4">CSS 選擇器可用來選取 HTML 元素並套用樣式：</p>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">p { color: red; }           /* 標籤選擇器 */
+.box { padding: 10px; }     /* 類別選擇器 */
+#header { background: blue; } /* ID 選擇器 */</pre>
+                    <p>優先級：inline style &gt; ID &gt; class &gt; tag</p>
+                </div>
+            </div>
+			  <div class="lesson-section mb-8" data-lesson="2" style="display: none;">
+                <h3 class="text-xl font-bold mb-4">第3課：顏色與背景</h3>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <p class="mb-4">CSS 提供多種方式來設定顏色和背景，掌握這些技巧可以讓網頁更加美觀。</p>
+
+                    <h4 class="font-bold mb-2">顏色表示方法</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 顏色名稱 */
+color: red;
+color: blue;
+color: forestgreen;
+
+/* 十六進制 */
+color: #ff0000;  /* 紅色 */
+color: #00ff00;  /* 綠色 */
+color: #0000ff;  /* 藍色 */
+color: #333;     /* 深灰色 (簡寫) */
+
+/* RGB */
+color: rgb(255, 0, 0);      /* 紅色 */
+color: rgb(0, 255, 0);      /* 綠色 */
+
+/* RGBA (帶透明度) */
+color: rgba(255, 0, 0, 0.5);  /* 半透明紅色 */
+color: rgba(0, 0, 0, 0.8);    /* 80% 不透明黑色 */
+
+/* HSL (色相、飽和度、亮度) */
+color: hsl(0, 100%, 50%);     /* 紅色 */
+color: hsl(120, 100%, 50%);   /* 綠色 */</pre>
+
+                    <h4 class="font-bold mb-2">背景屬性</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 背景顏色 */
+background-color: #f0f4f8;
+background-color: rgba(255, 255, 255, 0.9);
+
+/* 背景圖片 */
+background-image: url("background.jpg");
+background-image: linear-gradient(to right, #ff7e5f, #feb47b);
+
+/* 背景重複 */
+background-repeat: no-repeat;  /* 不重複 */
+background-repeat: repeat-x;   /* 水平重複 */
+background-repeat: repeat-y;   /* 垂直重複 */
+
+/* 背景位置 */
+background-position: center;
+background-position: top left;
+background-position: 50% 25%;
+
+/* 背景大小 */
+background-size: cover;        /* 覆蓋整個容器 */
+background-size: contain;      /* 完整顯示圖片 */
+background-size: 100% 100%;    /* 拉伸填滿 */
+
+/* 簡寫語法 */
+background: #fff url("bg.jpg") no-repeat center/cover;</pre>
+
+                    <h4 class="font-bold mb-2">漸變背景</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 線性漸變 */
+background: linear-gradient(to right, #ff7e5f, #feb47b);
+background: linear-gradient(45deg, #667eea, #764ba2);
+background: linear-gradient(to bottom, red 0%, yellow 50%, green 100%);
+
+/* 徑向漸變 */
+background: radial-gradient(circle, #ff7e5f, #feb47b);
+background: radial-gradient(ellipse at center, #667eea 0%, #764ba2 100%);</pre>
+
+                    <h4 class="font-bold mb-2">顏色理論基礎</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-white p-4 rounded border">
+                            <h5 class="font-bold mb-2">RGB 色彩模式</h5>
+                            <p class="text-sm text-gray-600 mb-2">紅(Red)、綠(Green)、藍(Blue)三原色混合</p>
+                            <div class="flex space-x-2">
+                                <div class="w-8 h-8 bg-red-500 rounded"></div>
+                                <div class="w-8 h-8 bg-green-500 rounded"></div>
+                                <div class="w-8 h-8 bg-blue-500 rounded"></div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded border">
+                            <h5 class="font-bold mb-2">HSL 色彩模式</h5>
+                            <p class="text-sm text-gray-600 mb-2">色相(Hue)、飽和度(Saturation)、亮度(Lightness)</p>
+                            <div class="text-xs space-y-1">
+                                <div>色相: 0-360度</div>
+                                <div>飽和度: 0-100%</div>
+                                <div>亮度: 0-100%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold mb-2">實際應用範例</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <div class="p-4 rounded-lg text-white text-center" style="background-color: #3b82f6;">
+                            <h5 class="font-bold">純色背景</h5>
+                            <p class="text-sm">background-color: #3b82f6;</p>
+                        </div>
+                        <div class="p-4 rounded-lg text-white text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <h5 class="font-bold">漸變背景</h5>
+                            <p class="text-sm">線性漸變效果</p>
+                        </div>
+                        <div class="p-4 rounded-lg text-gray-800 text-center" style="background: rgba(255, 193, 7, 0.2); border: 2px solid #ffc107;">
+                            <h5 class="font-bold">半透明背景</h5>
+                            <p class="text-sm">rgba(255, 193, 7, 0.2)</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 grid grid-cols-2 gap-4">
+                        <div class="h-20 rounded" style="background: linear-gradient(45deg, #667eea, #764ba2);"></div>
+                        <div class="h-20 rounded" style="background: radial-gradient(circle, #ff7e5f, #feb47b);"></div>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">左：線性漸變 45度，右：圓形徑向漸變</p>
+
+                    <div class="mt-6 bg-blue-50 p-4 rounded-lg">
+                        <h5 class="font-bold text-blue-800 mb-2">💡 實用小技巧</h5>
+                        <ul class="list-disc pl-6 text-blue-700 space-y-1 text-sm">
+                            <li>使用 RGBA 可以創建半透明效果，適合疊加設計</li>
+                            <li>HSL 比 RGB 更直觀，適合調整顏色明暗</li>
+                            <li>漸變可以替代圖片，減少檔案大小</li>
+                            <li>background-size: cover 確保圖片覆蓋整個容器</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="lesson-section mb-8" data-lesson="3" style="display: none;">
+                <h3 class="text-xl font-bold mb-4">第4課：文字樣式與排版</h3>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <p class="mb-4">文字是網頁的重要組成部分，掌握文字樣式可以大幅提升網頁的可讀性和美觀度。</p>
+
+                    <h4 class="font-bold mb-2">字體相關屬性</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 字體家族 */
+font-family: "Noto Sans TC", Arial, sans-serif;
+
+/* 字體大小 */
+font-size: 16px;    /* 像素 */
+font-size: 1.2em;   /* 相對大小 */
+font-size: 1.5rem;  /* 根元素倍數 */
+
+/* 字體粗細 */
+font-weight: normal;  /* 正常 */
+font-weight: bold;    /* 粗體 */
+font-weight: 600;     /* 數值 100-900 */
+
+/* 字體樣式 */
+font-style: normal;   /* 正常 */
+font-style: italic;   /* 斜體 */</pre>
+
+                    <h4 class="font-bold mb-2">文字對齊與裝飾</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 文字對齊 */
+text-align: left;     /* 左對齊 */
+text-align: center;   /* 置中 */
+text-align: right;    /* 右對齊 */
+text-align: justify;  /* 兩端對齊 */
+
+/* 文字裝飾 */
+text-decoration: none;         /* 無裝飾 */
+text-decoration: underline;    /* 底線 */
+text-decoration: line-through; /* 刪除線 */
+
+/* 行高 */
+line-height: 1.6;     /* 倍數 */
+line-height: 24px;    /* 固定像素 */
+
+/* 字距和詞距 */
+letter-spacing: 1px;  /* 字距 */
+word-spacing: 2px;    /* 詞距 */</pre>
+
+                    <div class="mt-4 p-4 border rounded-lg">
+                        <h5 class="font-bold mb-2">實例展示</h5>
+                        <div style="font-family: 'Times New Roman', serif; font-size: 18px; line-height: 1.8; text-align: justify;">
+                            這是一段使用 Times New Roman 字體的文字範例，字體大小為18px，行高為1.8倍，採用兩端對齊的方式排版。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lesson-section mb-8" data-lesson="4" style="display: none;">
+                <h3 class="text-xl font-bold mb-4">第5課：盒模型：邊距、邊框與內邊距</h3>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <p class="mb-4">盒模型是 CSS 佈局的基礎概念。每個元素都是一個矩形盒子，由內容、內邊距、邊框和外邊距組成。</p>
+
+                    <h4 class="font-bold mb-2">盒模型組成</h4>
+                    <div class="mb-4 p-4 border-2 border-gray-400 bg-yellow-100">
+                        <div class="p-4 border-2 border-green-400 bg-green-100">
+                            <div class="p-4 border-2 border-blue-400 bg-blue-100">
+                                <div class="p-4 bg-white text-center">
+                                    內容區域 (content)
+                                </div>
+                            </div>
+                            <div class="text-center text-sm mt-2">內邊距 (padding)</div>
+                        </div>
+                        <div class="text-center text-sm mt-2">邊框 (border)</div>
+                    </div>
+                    <div class="text-center text-sm">外邊距 (margin)</div>
+
+                    <h4 class="font-bold mb-2 mt-6">外邊距 (margin)</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 四邊相同 */
+margin: 20px;
+
+/* 上下、左右 */
+margin: 10px 20px;
+
+/* 上、左右、下 */
+margin: 10px 20px 15px;
+
+/* 上、右、下、左 (順時針) */
+margin: 10px 20px 15px 5px;
+
+/* 單獨設定 */
+margin-top: 10px;
+margin-right: 20px;
+margin-bottom: 15px;
+margin-left: 5px;
+
+/* 水平置中 */
+margin: 0 auto;</pre>
+
+                    <h4 class="font-bold mb-2">內邊距 (padding)</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 語法與 margin 相同 */
+padding: 15px;
+padding: 10px 20px;
+padding-top: 10px;</pre>
+
+                    <h4 class="font-bold mb-2">邊框 (border)</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 簡寫語法 */
+border: 2px solid #333;
+
+/* 分別設定 */
+border-width: 2px;
+border-style: solid; /* solid, dashed, dotted, double */
+border-color: #333;
+
+/* 圓角 */
+border-radius: 8px;
+border-radius: 50%; /* 圓形 */</pre>
+
+                    <h4 class="font-bold mb-2">box-sizing 屬性</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg">/* 改變盒模型計算方式 */
+box-sizing: content-box; /* 預設值，寬度不含 padding 和 border */
+box-sizing: border-box;  /* 寬度包含 padding 和 border */
+
+/* 建議全域設定 */
+* {
+  box-sizing: border-box;
+}</pre>
+                </div>
+            </div>
+
+            <div class="lesson-section mb-8" data-lesson="5" style="display: none;">
+                <h3 class="text-xl font-bold mb-4">第6課：尺寸與單位</h3>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <p class="mb-4">CSS 支援多種單位，選擇合適的單位對響應式設計和易維護性非常重要。</p>
+
+                    <h4 class="font-bold mb-2">絕對單位</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 像素 - 最常用 */
+width: 200px;
+font-size: 16px;
+
+/* 其他絕對單位 (較少使用) */
+width: 2in;   /* 英寸 */
+width: 5cm;   /* 公分 */
+width: 12pt;  /* 點 (印刷業) */</pre>
+
+                    <h4 class="font-bold mb-2">相對單位</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* em - 相對於父元素字體大小 */
+font-size: 1.2em;
+margin: 0.5em;
+
+/* rem - 相對於根元素字體大小 */
+font-size: 1.5rem;
+padding: 2rem;
+
+/* 百分比 - 相對於父元素 */
+width: 80%;
+height: 50%;
+
+/* 視窗單位 */
+width: 100vw;  /* 視窗寬度的 100% */
+height: 100vh; /* 視窗高度的 100% */
+font-size: 4vw; /* 響應式字體 */
+
+/* 其他單位 */
+width: 10ch;   /* 字符寬度 */
+height: 1ex;   /* x 字母高度 */</pre>
+
+                    <h4 class="font-bold mb-2">寬度和高度</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 基本尺寸 */
+width: 300px;
+height: 200px;
+
+/* 最大最小值 */
+max-width: 100%;
+min-width: 200px;
+max-height: 500px;
+min-height: 100px;
+
+/* 特殊值 */
+width: auto;     /* 自動 */
+width: inherit;  /* 繼承父元素 */
+width: initial;  /* 初始值 */
+width: fit-content; /* 適合內容 */</pre>
+
+                    <div class="mt-4 grid grid-cols-2 gap-4">
+                        <div class="bg-blue-200 p-4 text-center" style="width: 200px;">
+                            200px 固定寬度
+                        </div>
+                        <div class="bg-green-200 p-4 text-center" style="width: 50%;">
+                            50% 相對寬度
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lesson-section mb-8" data-lesson="6" style="display: none;">
+                <h3 class="text-xl font-bold mb-4">第7課：顯示與定位</h3>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <p class="mb-4">display 和 position 屬性控制元素的顯示方式和定位行為，是佈局的關鍵屬性。</p>
+
+                    <h4 class="font-bold mb-2">display 屬性</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 塊級元素 - 佔滿一行 */
+display: block;
+
+/* 行內元素 - 在同一行顯示 */
+display: inline;
+
+/* 行內塊級 - 結合兩者特點 */
+display: inline-block;
+
+/* 隱藏元素 */
+display: none;
+
+/* 彈性盒子 */
+display: flex;
+
+/* 網格佈局 */
+display: grid;
+
+/* 表格顯示 */
+display: table;
+display: table-cell;</pre>
+
+                    <h4 class="font-bold mb-2">position 屬性</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 預設值 - 正常文檔流 */
+position: static;
+
+/* 相對定位 - 相對於原位置 */
+position: relative;
+top: 10px;
+left: 20px;
+
+/* 絕對定位 - 相對於最近的定位祖先 */
+position: absolute;
+top: 0;
+right: 0;
+
+/* 固定定位 - 相對於視窗 */
+position: fixed;
+bottom: 20px;
+right: 20px;
+
+/* 黏性定位 - 滾動時固定 */
+position: sticky;
+top: 0;</pre>
+
+                    <h4 class="font-bold mb-2">z-index 層級</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 控制元素堆疊順序 */
+z-index: 1;     /* 較低層級 */
+z-index: 999;   /* 較高層級 */
+z-index: -1;    /* 負值，置於後方 */</pre>
+
+                    <div class="mt-4 relative h-32 bg-gray-200 rounded">
+                        <div class="absolute top-2 left-2 w-16 h-16 bg-red-400 rounded" style="z-index: 1;"></div>
+                        <div class="absolute top-6 left-6 w-16 h-16 bg-blue-400 rounded" style="z-index: 2;"></div>
+                        <div class="absolute top-10 left-10 w-16 h-16 bg-green-400 rounded" style="z-index: 3;"></div>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">z-index 層級示例：綠色(3) > 藍色(2) > 紅色(1)</p>
+                </div>
+            </div>
+
+            <div class="lesson-section mb-8" data-lesson="7" style="display: none;">
+                <h3 class="text-xl font-bold mb-4">第8課：浮動與清除</h3>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <p class="mb-4">浮動 (float) 是早期 CSS 佈局的主要方式，雖然現在有更好的方法，但理解浮動仍然重要。</p>
+
+                    <h4 class="font-bold mb-2">浮動基礎</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 浮動方向 */
+float: left;   /* 向左浮動 */
+float: right;  /* 向右浮動 */
+float: none;   /* 不浮動 (預設) */
+
+/* 文字環繞圖片 */
+.image {
+  float: left;
+  margin: 0 20px 20px 0;
+}</pre>
+
+                    <h4 class="font-bold mb-2">清除浮動</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* clear 屬性 */
+clear: left;   /* 清除左浮動 */
+clear: right;  /* 清除右浮動 */
+clear: both;   /* 清除所有浮動 */
+
+/* clearfix 技巧 - 解決父元素高度塌陷 */
+.clearfix::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* 現代 clearfix */
+.clearfix::after {
+  content: "";
+  display: block;
+  clear: both;
+}</pre>
+
+                    <h4 class="font-bold mb-2">浮動佈局範例</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 兩欄佈局 */
+.sidebar {
+  float: left;
+  width: 25%;
+}
+
+.main-content {
+  float: right;
+  width: 70%;
+}
+
+/* 三欄佈局 */
+.left-sidebar { float: left; width: 20%; }
+.right-sidebar { float: right; width: 20%; }
+.main { margin: 0 22%; } /* 左右留空間 */</pre>
+
+                    <div class="mt-4 p-4 border rounded bg-white clearfix">
+                        <div class="float-left w-12 h-12 bg-blue-400 rounded mr-4"></div>
+                        <p class="text-sm">這是一個浮動範例。藍色方塊向左浮動，文字會環繞在它的右邊和下方。這就是浮動的基本效果。</p>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-yellow-100 rounded">
+                        <h5 class="font-bold text-yellow-800">⚠️ 注意事項</h5>
+                        <p class="text-yellow-700 text-sm">現代 CSS 佈局建議使用 Flexbox 或 Grid，它們比浮動更強大且容易控制。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lesson-section mb-8" data-lesson="8" style="display: none;">
+                <h3 class="text-xl font-bold mb-4">第9課：基本佈局技巧</h3>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <p class="mb-4">學習常見的佈局模式和技巧，為後續的 Flexbox 和 Grid 學習打下基礎。</p>
+
+                    <h4 class="font-bold mb-2">水平置中</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 塊級元素置中 */
+.center-block {
+  width: 300px;
+  margin: 0 auto;
+}
+
+/* 文字置中 */
+.center-text {
+  text-align: center;
+}
+
+/* 行內塊級元素置中 */
+.parent {
+  text-align: center;
+}
+.child {
+  display: inline-block;
+}</pre>
+
+                    <h4 class="font-bold mb-2">垂直置中</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 單行文字垂直置中 */
+.single-line {
+  height: 50px;
+  line-height: 50px;
+}
+
+/* 使用 table-cell */
+.vertical-center {
+  display: table-cell;
+  vertical-align: middle;
+  height: 200px;
+}
+
+/* 絕對定位置中 */
+.absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}</pre>
+
+                    <h4 class="font-bold mb-2">常見佈局模式</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 聖杯佈局 (Holy Grail) */
+.container {
+  min-height: 100vh;
+}
+.header, .footer {
+  height: 60px;
+  background: #333;
+}
+.content {
+  min-height: calc(100vh - 120px);
+}
+
+/* 等高欄 */
+.equal-height {
+  display: table;
+  width: 100%;
+}
+.column {
+  display: table-cell;
+  vertical-align: top;
+}</pre>
+
+                    <h4 class="font-bold mb-2">響應式基礎</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 流體佈局 */
+.fluid-layout {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 簡單的響應式 */
+.responsive-box {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .responsive-box {
+    width: 50%;
+    float: left;
+  }
+}</pre>
+
+                    <div class="mt-4 space-y-4">
+                        <div class="h-16 bg-gray-800 text-white flex items-center justify-center">Header</div>
+                        <div class="flex">
+                            <div class="w-1/4 h-24 bg-blue-200 flex items-center justify-center">Sidebar</div>
+                            <div class="w-3/4 h-24 bg-green-200 flex items-center justify-center">Main Content</div>
+                        </div>
+                        <div class="h-16 bg-gray-800 text-white flex items-center justify-center">Footer</div>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">基本的三欄佈局示例</p>
+                </div>
+            </div>
+
+            <div class="lesson-section mb-8" data-lesson="9" style="display: none;">
+                <h3 class="text-xl font-bold mb-4">第10課：CSS 重置與標準化</h3>
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <p class="mb-4">不同瀏覽器有不同的預設樣式，CSS 重置和標準化可以確保一致的顯示效果。</p>
+
+                    <h4 class="font-bold mb-2">為什麼需要重置？</h4>
+                    <ul class="list-disc pl-6 mb-4 text-gray-700">
+                        <li>不同瀏覽器的預設樣式不同</li>
+                        <li>確保跨瀏覽器的一致性</li>
+                        <li>移除不必要的預設樣式</li>
+                        <li>提供更好的設計控制</li>
+                    </ul>
+
+                    <h4 class="font-bold mb-2">簡單的 CSS Reset</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 通用重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 移除列表樣式 */
+ul, ol {
+  list-style: none;
+}
+
+/* 移除連結樣式 */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 圖片響應式 */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 表單元素重置 */
+button, input, textarea, select {
+  font: inherit;
+}</pre>
+
+                    <h4 class="font-bold mb-2">Normalize.css 方法</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* 保留有用的預設值，修正不一致 */
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  display: block;
+}
+
+h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+
+/* 更多標準化規則... */</pre>
+
+                    <h4 class="font-bold mb-2">現代 CSS Reset</h4>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">/* Josh Comeau's Modern CSS Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}</pre>
+
+                    <h4 class="font-bold mb-2">最佳實踐建議</h4>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <ul class="list-disc pl-6 space-y-2 text-blue-800">
+                            <li><strong>選擇合適的方法：</strong>Reset vs Normalize vs 自定義</li>
+                            <li><strong>放在樣式表最前面：</strong>確保重置樣式被正確應用</li>
+                            <li><strong>根據專案需求調整：</strong>不是所有專案都需要完整重置</li>
+                            <li><strong>考慮維護性：</strong>使用知名的重置庫或建立團隊規範</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-green-50 rounded-lg">
+                        <h5 class="font-bold text-green-800 mb-2">🎉 恭喜完成 CSS 基礎入門！</h5>
+                        <p class="text-green-700">您已經學會了 CSS 的所有基礎知識。現在可以：</p>
+                        <ul class="list-disc pl-6 mt-2 text-green-700">
+                            <li>建立基本的網頁樣式</li>
+                            <li>控制文字和顏色</li>
+                            <li>使用盒模型進行佈局</li>
+                            <li>理解定位和顯示屬性</li>
+                            <li>準備學習更進階的 Flexbox 和 Grid</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="navigation-buttons flex justify-between mt-8">
+                <button id="prev-lesson" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded" onclick="previousLesson()" disabled>上一課</button>
+                <span id="lesson-counter" class="text-gray-600 px-4 py-2">第 1 課 / 共 10 課</span>
+                <button id="next-lesson" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onclick="nextLesson()">下一課</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSS學習課程--CSS 佈局技巧 -->
+    <div id="lesson-layout" class="lesson-content">
+        <div class="lesson-container p-8 bg-white shadow-lg rounded-lg max-w-4xl mx-auto mt-10 animate-fadeIn">
+            <div class="close-btn" onclick="closeLesson('layout')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">CSS 佈局技巧</h2>
+            <p class="mb-6 text-gray-600">掌握 Flexbox 與 Grid 是現代網頁設計中不可或缺的能力。本課程將帶您深入了解這兩個強大的佈局工具。</p>
+
+            <!-- Flexbox 部分 -->
+            <div class="mb-10">
+                <h3 class="text-xl font-bold mb-4 text-blue-600">🔸 Flexbox 彈性盒子佈局</h3>
+                
+                <div class="mb-6">
+                    <h4 class="font-bold mb-3">Flexbox 基礎概念</h4>
+                    <p class="mb-4 text-gray-700">Flexbox 是一維佈局方法，主要用於在容器中排列項目，提供靈活的空間分配和對齊控制。</p>
+                    
+                    <pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto mb-4">/* 啟用 Flexbox */
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+/* 子項目屬性 */
+.item {
+  flex: 1;  /* 等比例擴展 */
+}
+
+.item-grow {
+  flex-grow: 2;  /* 擴展比例為 2 */
+}</pre>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="font-bold mb-3">主要屬性詳解</h4>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h5 class="font-semibold mb-2">父容器屬性</h5>
+                            <ul class="text-sm space-y-1">
+                                <li><code class="bg-gray-200 px-1 rounded">justify-content</code>: 主軸對齊</li>
+                                <li><code class="bg-gray-200 px-1 rounded">align-items</code>: 交叉軸對齊</li>
+                                <li><code class="bg-gray-200 px-1 rounded">flex-direction</code>: 主軸方向</li>
+                                <li><code class="bg-gray-200 px-1 rounded">flex-wrap</code>: 是否換行</li>
+                                <li><code class="bg-gray-200 px-1 rounded">gap</code>: 項目間距</li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h5 class="font-semibold mb-2">子項目屬性</h5>
+                            <ul class="text-sm space-y-1">
+                                <li><code class="bg-gray-200 px-1 rounded">flex-grow</code>: 擴展比例</li>
+                                <li><code class="bg-gray-200 px-1 rounded">flex-shrink</code>: 收縮比例</li>
+                                <li><code class="bg-gray-200 px-1 rounded">flex-basis</code>: 基準大小</li>
+                                <li><code class="bg-gray-200 px-1 rounded">align-self</code>: 個別對齊</li>
+                                <li><code class="bg-gray-200 px-1 rounded">order</code>: 排列順序</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="font-bold mb-3">實際範例演示</h4>
+                    
+                    <!-- 水平置中 -->
+                    <div class="mb-4">
+                        <h5 class="font-medium mb-2">1. 水平垂直置中</h5>
+                        <div class="border rounded p-4 bg-gray-50 flex items-center justify-center h-24 mb-2">
+                            <div class="bg-blue-500 text-white px-4 py-2 rounded">完美置中</div>
+                        </div>
+                        <pre class="bg-gray-800 text-white p-2 rounded text-xs">.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}</pre>
+                    </div>
+
+                    <!-- 等分佈局 -->
+                    <div class="mb-4">
+                        <h5 class="font-medium mb-2">2. 等分三欄佈局</h5>
+                        <div class="border rounded p-4 bg-gray-50 flex gap-4 mb-2">
+                            <div class="bg-red-400 text-white p-3 rounded flex-1 text-center">欄位 1</div>
+                            <div class="bg-green-400 text-white p-3 rounded flex-1 text-center">欄位 2</div>
+                            <div class="bg-blue-400 text-white p-3 rounded flex-1 text-center">欄位 3</div>
+                        </div>
+                        <pre class="bg-gray-800 text-white p-2 rounded text-xs">.equal-columns {
+  display: flex;
+  gap: 1rem;
+}
+.column {
+  flex: 1;
+}</pre>
+                    </div>
+
+                    <!-- 導覽列 -->
+                    <div class="mb-4">
+                        <h5 class="font-medium mb-2">3. 導覽列佈局</h5>
+                        <div class="border rounded p-4 bg-gray-50 flex justify-between items-center mb-2">
+                            <div class="font-bold text-blue-600">LOGO</div>
+                            <div class="flex gap-4">
+                                <span class="text-gray-600">首頁</span>
+                                <span class="text-gray-600">關於</span>
+                                <span class="text-gray-600">聯繫</span>
+                            </div>
+                            <button class="bg-blue-500 text-white px-3 py-1 rounded text-sm">登入</button>
+                        </div>
+                        <pre class="bg-gray-800 text-white p-2 rounded text-xs">.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid 部分 -->
+            <div class="mb-10">
+                <h3 class="text-xl font-bold mb-4 text-purple-600">🔸 CSS Grid 網格佈局</h3>
+                
+                <div class="mb-6">
+                    <h4 class="font-bold mb-3">Grid 基礎概念</h4>
+                    <p class="mb-4 text-gray-700">CSS Grid 是二維佈局系統，可以同時控制行和列，適合創建複雜的網頁佈局。</p>
+                    
+                    <pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto mb-4">/* 基本 Grid 設定 */
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;  /* 三欄，中間欄較寬 */
+  grid-template-rows: auto 1fr auto;    /* 頭部、內容、底部 */
+  gap: 20px;
+  min-height: 100vh;
+}
+
+/* 指定項目位置 */
+.header {
+  grid-column: 1 / -1;  /* 橫跨所有欄位 */
+}
+
+.sidebar {
+  grid-column: 1;
+  grid-row: 2;
+}</pre>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="font-bold mb-3">Grid 範例演示</h4>
+                    
+                    <!-- 基本網格 -->
+                    <div class="mb-4">
+                        <h5 class="font-medium mb-2">1. 基本網格佈局</h5>
+                        <div class="border rounded p-4 bg-gray-50 mb-2" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+                            <div class="bg-blue-300 p-2 text-center text-sm rounded">A</div>
+                            <div class="bg-green-300 p-2 text-center text-sm rounded">B</div>
+                            <div class="bg-yellow-300 p-2 text-center text-sm rounded">C</div>
+                            <div class="bg-red-300 p-2 text-center text-sm rounded">D</div>
+                            <div class="bg-purple-300 p-2 text-center text-sm rounded">E</div>
+                            <div class="bg-pink-300 p-2 text-center text-sm rounded">F</div>
+                        </div>
+                        <pre class="bg-gray-800 text-white p-2 rounded text-xs">.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}</pre>
+                    </div>
+
+                    <!-- 複雜佈局 -->
+                    <div class="mb-4">
+                        <h5 class="font-medium mb-2">2. 複雜頁面佈局</h5>
+                        <div class="border rounded bg-gray-50 overflow-hidden mb-2" style="display: grid; grid-template-columns: 1fr 3fr 1fr; grid-template-rows: auto 1fr auto; height: 200px; gap: 1px;">
+                            <div class="bg-gray-700 text-white p-2 text-center text-sm" style="grid-column: 1 / -1;">Header</div>
+                            <div class="bg-blue-400 text-white p-2 text-center text-sm">Sidebar</div>
+                            <div class="bg-green-400 text-white p-2 text-center text-sm">Main Content</div>
+                            <div class="bg-yellow-400 text-white p-2 text-center text-sm">Ads</div>
+                            <div class="bg-gray-700 text-white p-2 text-center text-sm" style="grid-column: 1 / -1;">Footer</div>
+                        </div>
+                        <pre class="bg-gray-800 text-white p-2 rounded text-xs">.page-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr 150px;
+  grid-template-rows: auto 1fr auto;
+}
+.header { grid-column: 1 / -1; }
+.footer { grid-column: 1 / -1; }</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 響應式設計 -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold mb-4 text-green-600">🔸 響應式佈局技巧</h3>
+                
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto mb-4">/* Flexbox 響應式 */
+.responsive-flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.responsive-flex > * {
+  flex: 1 1 300px;  /* 最小寬度 300px */
+}
+
+/* Grid 響應式 */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+/* 媒體查詢結合 */
+@media (max-width: 768px) {
+  .desktop-grid {
+    grid-template-columns: 1fr;  /* 手機版改為單欄 */
+  }
+  
+  .desktop-flex {
+    flex-direction: column;  /* 手機版改為垂直排列 */
+  }
+}</pre>
+            </div>
+
+            <!-- 實用技巧 -->
+            <div class="bg-gradient-to-r from-blue-50 to-green-50 p-6 rounded-lg">
+                <h4 class="font-bold text-lg mb-4">💡 佈局最佳實踐</h4>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h5 class="font-semibold mb-2 text-blue-600">Flexbox 適用場景</h5>
+                        <ul class="text-sm space-y-1">
+                            <li>• 導覽列和按鈕群組</li>
+                            <li>• 卡片排列和等高佈局</li>
+                            <li>• 垂直和水平置中</li>
+                            <li>• 一維方向的元素排列</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-semibold mb-2 text-green-600">Grid 適用場景</h5>
+                        <ul class="text-sm space-y-1">
+                            <li>• 整體頁面佈局</li>
+                            <li>• 複雜的二維排版</li>
+                            <li>• 圖片畫廊和網格系統</li>
+                            <li>• 雜誌式多欄佈局</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-4 bg-white rounded border-l-4 border-yellow-400">
+                    <p class="text-sm"><strong>Pro Tip:</strong> 現代佈局通常結合使用 Flexbox 和 Grid - Grid 用於整體佈局，Flexbox 用於組件內部排列。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+	<!-- CSS學習課程--CSS 動畫與特效 -->
+		<div id="lesson-animation" class="lesson-content">
+			<div class="lesson-container p-8 bg-white shadow-lg rounded-lg max-w-4xl mx-auto mt-10 animate-fadeIn">
+				<div class="close-btn" onclick="closeLesson('animation')">✕</div>
+				<h2 class="text-2xl font-bold mb-6 text-purple-600">CSS 動畫與特效</h2>
+				<p class="mb-6 text-gray-600">學習創建吸引人的動畫、過渡效果和互動元素，提升用戶體驗。</p>
+
+				<!-- 課程大綱 -->
+				<div class="lesson-section mb-8">
+					<h3 class="text-xl font-bold mb-4">課程大綱</h3>
+					<ul class="list-disc pl-6 space-y-2">
+						<li>CSS 過渡效果 (transition)</li>
+						<li>關鍵影格動畫 (@keyframes)</li>
+						<li>動畫屬性詳解</li>
+						<li>變形效果 (transform)</li>
+						<li>實用動畫範例</li>
+						<li>效能優化技巧</li>
+						<li>互動動畫設計</li>
+						<li>動畫最佳實踐</li>
+					</ul>
+				</div>
+
+				<!-- 過渡效果 -->
+				<div class="mb-10">
+					<h3 class="text-xl font-bold mb-4 text-blue-600">🔸 CSS 過渡效果 (Transition)</h3>
+					
+					<div class="mb-6">
+						<h4 class="font-bold mb-3">基本語法</h4>
+						<p class="mb-4 text-gray-700">過渡效果讓屬性變化變得平滑，而不是瞬間跳躍。</p>
+						
+						<pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto mb-4">/* 基本過渡語法 */
+		.button {
+		  background-color: #3b82f6;
+		  color: white;
+		  transition: background-color 0.3s ease;
+		}
+
+		.button:hover {
+		  background-color: #2563eb;
+		}
+
+		/* 多個屬性過渡 */
+		.card {
+		  transform: scale(1);
+		  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		  transition: transform 0.3s ease, box-shadow 0.3s ease;
+		}
+
+		.card:hover {
+		  transform: scale(1.05);
+		  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+		}</pre>
+					</div>
+
+					<div class="mb-6">
+						<h4 class="font-bold mb-3">實際範例</h4>
+						<div class="grid md:grid-cols-2 gap-6">
+							<div class="bg-gray-50 p-4 rounded-lg">
+								<h5 class="font-medium mb-3">按鈕懸停效果</h5>
+								<button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors duration-300">
+									懸停我試試
+								</button>
+							</div>
+							<div class="bg-gray-50 p-4 rounded-lg">
+								<h5 class="font-medium mb-3">卡片縮放效果</h5>
+								<div class="bg-white p-4 rounded shadow hover:scale-105 hover:shadow-lg transition-transform duration-300 cursor-pointer">
+									懸停我會放大
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- 關鍵影格動畫 -->
+				<div class="mb-10">
+					<h3 class="text-xl font-bold mb-4 text-green-600">🔸 關鍵影格動畫 (@keyframes)</h3>
+					
+					<div class="mb-6">
+						<h4 class="font-bold mb-3">基本語法</h4>
+						<pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto mb-4">/* 定義動畫 */
+		@keyframes slideIn {
+		  from {
+			transform: translateX(-100%);
+			opacity: 0;
+		  }
+		  to {
+			transform: translateX(0);
+			opacity: 1;
+		  }
+		}
+
+		/* 使用百分比控制更精確 */
+		@keyframes bounce {
+		  0%, 100% {
+			transform: translateY(0);
+		  }
+		  25% {
+			transform: translateY(-10px);
+		  }
+		  50% {
+			transform: translateY(-20px);
+		  }
+		  75% {
+			transform: translateY(-10px);
+		  }
+		}
+
+		/* 套用動畫 */
+		.animated-element {
+		  animation: slideIn 1s ease-out;
+		}
+
+		.bouncing-element {
+		  animation: bounce 2s infinite;
+		}</pre>
+					</div>
+
+					<div class="mb-6">
+						<h4 class="font-bold mb-3">動畫展示</h4>
+						<div class="grid md:grid-cols-3 gap-4">
+							<div class="bg-gray-50 p-4 rounded-lg text-center">
+								<h5 class="font-medium mb-3">淡入效果</h5>
+								<div class="w-16 h-16 bg-blue-500 mx-auto rounded animate-pulse"></div>
+							</div>
+							<div class="bg-gray-50 p-4 rounded-lg text-center">
+								<h5 class="font-medium mb-3">旋轉效果</h5>
+								<div class="w-16 h-16 bg-green-500 mx-auto rounded animate-spin"></div>
+							</div>
+							<div class="bg-gray-50 p-4 rounded-lg text-center">
+								<h5 class="font-medium mb-3">彈跳效果</h5>
+								<div class="w-16 h-16 bg-purple-500 mx-auto rounded animate-bounce"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- 變形效果 -->
+				<div class="mb-10">
+					<h3 class="text-xl font-bold mb-4 text-red-600">🔸 變形效果 (Transform)</h3>
+					
+					<pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto mb-4">/* 2D 變形 */
+		.rotate { transform: rotate(45deg); }
+		.scale { transform: scale(1.5); }
+		.translate { transform: translate(50px, 100px); }
+		.skew { transform: skew(15deg, 0deg); }
+
+		/* 3D 變形 */
+		.rotate3d { transform: rotateX(45deg) rotateY(45deg); }
+		.perspective { 
+		  perspective: 1000px;
+		  transform-style: preserve-3d;
+		}
+
+		/* 組合變形 */
+		.combined {
+		  transform: rotate(15deg) scale(1.2) translate(10px, 5px);
+		  transition: transform 0.3s ease;
+		}</pre>
+
+					<div class="grid md:grid-cols-4 gap-4 mt-4">
+						<div class="bg-gray-50 p-4 rounded-lg text-center">
+							<div class="w-12 h-12 bg-red-400 mx-auto mb-2 transform hover:rotate-45 transition-transform"></div>
+							<p class="text-sm">旋轉</p>
+						</div>
+						<div class="bg-gray-50 p-4 rounded-lg text-center">
+							<div class="w-12 h-12 bg-blue-400 mx-auto mb-2 transform hover:scale-125 transition-transform"></div>
+							<p class="text-sm">縮放</p>
+						</div>
+						<div class="bg-gray-50 p-4 rounded-lg text-center">
+							<div class="w-12 h-12 bg-green-400 mx-auto mb-2 transform hover:translate-x-2 transition-transform"></div>
+							<p class="text-sm">移動</p>
+						</div>
+						<div class="bg-gray-50 p-4 rounded-lg text-center">
+							<div class="w-12 h-12 bg-yellow-400 mx-auto mb-2 transform hover:skew-x-12 transition-transform"></div>
+							<p class="text-sm">傾斜</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- 實用範例 -->
+				<div class="mb-10">
+					<h3 class="text-xl font-bold mb-4 text-indigo-600">🔸 實用動畫範例</h3>
+					
+					<div class="space-y-6">
+						<!-- Loading 動畫 -->
+						<div class="bg-gray-50 p-6 rounded-lg">
+							<h4 class="font-bold mb-3">Loading 動畫</h4>
+							<div class="flex items-center space-x-4 mb-4">
+								<div class="flex space-x-1">
+									<div class="w-2 h-8 bg-blue-500 animate-pulse" style="animation-delay: 0s"></div>
+									<div class="w-2 h-8 bg-blue-500 animate-pulse" style="animation-delay: 0.1s"></div>
+									<div class="w-2 h-8 bg-blue-500 animate-pulse" style="animation-delay: 0.2s"></div>
+									<div class="w-2 h-8 bg-blue-500 animate-pulse" style="animation-delay: 0.3s"></div>
+								</div>
+								<div class="w-8 h-8 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+							</div>
+							<pre class="bg-gray-800 text-white p-3 rounded text-xs">@keyframes loading-bars {
+		  0%, 100% { height: 1rem; }
+		  50% { height: 2rem; }
+		}
+
+		.loading-bar {
+		  animation: loading-bars 1s ease-in-out infinite;
+		}</pre>
+						</div>
+
+						<!-- 懸停效果 -->
+						<div class="bg-gray-50 p-6 rounded-lg">
+							<h4 class="font-bold mb-3">進階懸停效果</h4>
+							<div class="grid md:grid-cols-2 gap-4 mb-4">
+								<div class="group bg-white p-4 rounded-lg shadow hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden relative">
+									<div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 opacity-0 group-hover:opacity-10 transition-opacity"></div>
+									<h5 class="font-medium group-hover:text-blue-600 transition-colors">漸變疊加</h5>
+									<p class="text-sm text-gray-600">懸停看效果</p>
+								</div>
+								<div class="bg-white p-4 rounded-lg shadow hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer">
+									<h5 class="font-medium">上浮效果</h5>
+									<p class="text-sm text-gray-600">懸停會上浮</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- 效能優化提示 -->
+				<div class="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-lg">
+					<h4 class="font-bold text-lg mb-4 text-orange-800">⚡ 動畫效能優化技巧</h4>
+					<div class="grid md:grid-cols-2 gap-6">
+						<div>
+							<h5 class="font-semibold mb-2 text-orange-700">推薦做法</h5>
+							<ul class="text-sm space-y-1 text-orange-600">
+								<li>• 使用 transform 和 opacity</li>
+								<li>• 啟用硬體加速 (will-change)</li>
+								<li>• 避免動畫 layout 屬性</li>
+								<li>• 使用 CSS 而非 JavaScript</li>
+							</ul>
+						</div>
+						<div>
+							<h5 class="font-semibold mb-2 text-orange-700">避免的屬性</h5>
+							<ul class="text-sm space-y-1 text-orange-600">
+								<li>• width/height 變化</li>
+								<li>• top/left 位置變化</li>
+								<li>• margin/padding 變化</li>
+								<li>• border-width 變化</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="mt-4 p-4 bg-white rounded border-l-4 border-orange-400">
+						<pre class="text-sm"><code>/* 好的做法 */
+		.optimized {
+		  will-change: transform;
+		  transform: translateX(0);
+		  transition: transform 0.3s ease;
+		}
+
+		.optimized:hover {
+		  transform: translateX(10px);
+		}</code></pre>
+					</div>
+				</div>
+			</div>
+		</div>
+	
+	
+<!-- CSS學習課程--響應式網頁設計 -->
+		<div id="lesson-responsive" class="lesson-content">
+			<div class="lesson-container p-8 bg-white shadow-lg rounded-lg max-w-5xl mx-auto mt-10 animate-fadeIn">
+				<div class="close-btn" onclick="closeLesson('responsive')">✕</div>
+				<h2 class="text-2xl font-bold mb-6 text-blue-600">響應式網頁設計</h2>
+				<p class="mb-6 text-gray-600">學習如何讓網站在各種設備上都能完美顯示，從手機到桌面電腦，創建適應性強的現代網頁。</p>
+
+				<!-- 課程大綱 -->
+				<div class="lesson-section mb-8">
+					<h3 class="text-xl font-bold mb-4">課程大綱</h3>
+					<div class="grid md:grid-cols-2 gap-4">
+						<ul class="list-disc pl-6 space-y-2">
+							<li>響應式設計基本概念</li>
+							<li>Media Queries 媒體查詢</li>
+							<li>流體佈局與彈性設計</li>
+							<li>行動優先設計策略</li>
+							<li>斷點設定與最佳實踐</li>
+						</ul>
+						<ul class="list-disc pl-6 space-y-2">
+							<li>彈性圖片與媒體處理</li>
+							<li>Typography 響應式排版</li>
+							<li>導覽列響應式設計</li>
+							<li>表格響應式處理</li>
+							<li>效能優化技巧</li>
+						</ul>
+					</div>
+				</div>
+
+				<!-- 基本概念 -->
+				<div class="mb-10">
+					<h3 class="text-xl font-bold mb-4 text-green-600">🔸 響應式設計基本概念</h3>
+					
+					<div class="bg-blue-50 p-6 rounded-lg mb-6">
+						<h4 class="font-bold mb-3">什麼是響應式設計？</h4>
+						<p class="mb-4 text-gray-700">響應式網頁設計（Responsive Web Design, RWD）是一種網頁設計方法，讓網頁能夠根據用戶使用的設備自動調整佈局、內容和功能，提供最佳的瀏覽體驗。</p>
+						
+						<div class="grid md:grid-cols-3 gap-4 mt-4">
+							<div class="bg-white p-4 rounded border text-center">
+								<div class="text-3xl mb-2">📱</div>
+								<h5 class="font-semibold">手機</h5>
+								<p class="text-sm text-gray-600">320px - 768px</p>
+							</div>
+							<div class="bg-white p-4 rounded border text-center">
+								<div class="text-3xl mb-2">💻</div>
+								<h5 class="font-semibold">平板</h5>
+								<p class="text-sm text-gray-600">768px - 1024px</p>
+							</div>
+							<div class="bg-white p-4 rounded border text-center">
+								<div class="text-3xl mb-2">🖥️</div>
+								<h5 class="font-semibold">桌面</h5>
+								<p class="text-sm text-gray-600">1024px+</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Media Queries -->
+				<div class="mb-10">
+					<h3 class="text-xl font-bold mb-4 text-purple-600">🔸 Media Queries 媒體查詢</h3>
+					
+					<div class="mb-6">
+						<h4 class="font-bold mb-3">基本語法</h4>
+						<p class="mb-4 text-gray-700">Media Queries 讓我們能夠根據設備特性（如螢幕寬度、高度、方向等）套用不同的 CSS 樣式。</p>
+						
+						<pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto mb-4">/* 基本語法 */
+		@media media-type and (media-feature) {
+		  /* CSS 規則 */
+		}
+
+		/* 常用範例 */
+		@media screen and (max-width: 768px) {
+		  .container {
+			width: 100%;
+			padding: 0 15px;
+		  }
+		}
+
+		@media screen and (min-width: 1200px) {
+		  .container {
+			max-width: 1140px;
+			margin: 0 auto;
+		  }
+		}
+
+		/* 方向查詢 */
+		@media screen and (orientation: landscape) {
+		  .sidebar {
+			width: 25%;
+		  }
+		}
+
+		@media screen and (orientation: portrait) {
+		  .sidebar {
+			width: 100%;
+		  }
+		}</pre>
+					</div>
+
+					<div class="mb-6">
+						<h4 class="font-bold mb-3">常用媒體特性</h4>
+						<div class="grid md:grid-cols-2 gap-6">
+							<div class="bg-gray-50 p-4 rounded-lg">
+								<h5 class="font-semibold mb-2">尺寸相關</h5>
+								<ul class="text-sm space-y-1">
+									<li><code class="bg-gray-200 px-1 rounded">width</code> / <code class="bg-gray-200 px-1 rounded">height</code> - 確切尺寸</li>
+									<li><code class="bg-gray-200 px-1 rounded">max-width</code> / <code class="bg-gray-200 px-1 rounded">min-width</code> - 最大/最小寬度</li>
+									<li><code class="bg-gray-200 px-1 rounded">device-width</code> - 設備寬度</li>
+									<li><code class="bg-gray-200 px-1 rounded">aspect-ratio</code> - 長寬比</li>
+								</ul>
+							</div>
+							<div class="bg-gray-50 p-4 rounded-lg">
+								<h5 class="font-semibold mb-2">其他特性</h5>
+								<ul class="text-sm space-y-1">
+									<li><code class="bg-gray-200 px-1 rounded">orientation</code> - 方向（portrait/landscape）</li>
+									<li><code class="bg-gray-200 px-1 rounded">resolution</code> - 解析度</li>
+									<li><code class="bg-gray-200 px-1 rounded">hover</code> - 是否支援懸停</li>
+									<li><code class="bg-gray-200 px-1 rounded">pointer</code> - 主要輸入機制</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- 斷點設定 -->
+				<div class="mb-10">
+					<h3 class="text-xl font-bold mb-4 text-orange-600">🔸 斷點設定最佳實踐</h3>
+					
+					<div class="mb-6">
+						<h4 class="font-bold mb-3">常用斷點</h4>
+						<pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto mb-4">/* 行動優先的斷點設定 */
+
+		/* 超小螢幕 (手機, 小於 576px) */
+		/* 預設樣式，不需要 media query */
+
+		/* 小螢幕 (手機橫向, 576px 以上) */
+		@media (min-width: 576px) {
+		  .container { max-width: 540px; }
+		}
+
+		/* 中等螢幕 (平板, 768px 以上) */
+		@media (min-width: 768px) {
+		  .container { max-width: 720px; }
+		  .col-md-6 { width: 50%; }
+		}
+
+		/* 大螢幕 (桌面, 992px 以上) */
+		@media (min-width: 992px) {
+		  .container { max-width: 960px; }
+		  .col-lg-4 { width: 33.333%; }
+		}
+
+		/* 超大螢幕 (大桌面, 1200px 以上) */
+		@media (min-width: 1200px) {
+		  .container { max-width: 1140px; }
+		}
+
+		/* 超超大螢幕 (1400px 以上) */
+		@media (min-width: 1400px) {
+		  .container { max-width: 1320px; }
+		}</pre>
+					</div>
+
+					<div class="bg-yellow-50 p-6 rounded-lg mb-6">
+						<h4 class="font-bold mb-3 text-yellow-800">💡 斷點選擇建議</h4>
+						<div class="grid md:grid-cols-2 gap-4">
+							<div>
+								<h5 class="font-semibold mb-2">基於內容的斷點</h5>
+								<ul class="text-sm space-y-1 text-yellow-700">
+									<li>• 根據內容自然斷點設定</li>
+									<li>• 測試主要內容在何時需要調整</li>
+									<li>• 考慮導覽、圖片、文字的適應性</li>
+								</ul>
+							</div>
+							<div>
+								<h5 class="font-semibold mb-2">避免過多斷點</h5>
+								<ul class="text-sm space-y-1 text-yellow-700">
+									<li>• 通常 3-5 個斷點已足夠</li>
+									<li>• 使用彈性單位（%、em、rem）</li>
+									<li>• 優先解決主要設備問題</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- 行動優先設計 -->
+				<div class="mb-10">
+					<h3 class="text-xl font-bold mb-4 text-red-600">🔸 行動優先設計策略</h3>
+					
+					<div class="mb-6">
+						<h4 class="font-bold mb-3">為什麼選擇行動優先？</h4>
+						<div class="grid md:grid-cols-2 gap-6 mb-4">
+							<div class="bg-green-50 p-4 rounded-lg">
+								<h5 class="font-semibold mb-2 text-green-800">✅ 優點</h5>
+								<ul class="text-sm space-y-1 text-green-700">
+									<li>• 強迫思考核心功能</li>
+									<li>• 更好的效能表現</li>
+									<li>• 內容優先的設計思維</li>
+									<li>• 漸進增強的體驗</li>
+								</ul>
+							</div>
+							<div class="bg-red-50 p-4 rounded-lg">
+								<h5 class="font-semibold mb-2 text-red-800">❌ 桌面優先的問題</h5>
+								<ul class="text-sm space-y-1 text-red-700">
+									<li>• 容易遺漏行動體驗</li>
+									<li>• 載入不必要的資源</li>
+									<li>• 複雜的縮減過程</li>
+									<li>• 效能較差</li>
+								</ul>
+							</div>
+						</div>
+
+						<pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto">/* 行動優先的 CSS 結構 */
+
+		/* 基本樣式 (行動版) */
+		.navigation {
+		  display: flex;
+		  flex-direction: column;
+		  background-color: #fff;
+		  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+
+		.nav-item {
+		  padding: 15px 20px;
+		  border-bottom: 1px solid #eee;
+		}
+
+		/* 平板以上 */
+		@media (min-width: 768px) {
+		  .navigation {
+			flex-direction: row;
+			justify-content: space-between;
+		  }
+		  
+		  .nav-item {
+			border-bottom: none;
+			border-right: 1px solid #eee;
+		  }
+		}
+
+		/* 桌面版 */
+		@media (min-width: 1024px) {
+		  .navigation {
+			padding: 0 40px;
+		  }
+		  
+		  .nav-item {
+			padding: 20px 30px;
+		  }
+		}</pre>
+					</div>
+				</div>
+
+				<!-- 實際範例 -->
+				<div class="mb-10">
+					<h3 class="text-xl font-bold mb-4 text-teal-600">🔸 實際應用範例</h3>
+					
+					<!-- 響應式網格 -->
+					<div class="mb-8">
+						<h4 class="font-bold mb-3">1. 響應式網格系統</h4>
+						<div class="mb-4">
+							<!-- 示範網格 -->
+							<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+								<div class="bg-blue-200 p-4 rounded text-center">
+									<div class="text-sm font-medium">欄位 1</div>
+									<div class="text-xs text-gray-600 mt-1">手機: 100%<br>平板: 50%<br>桌面: 25%</div>
+								</div>
+								<div class="bg-green-200 p-4 rounded text-center">
+									<div class="text-sm font-medium">欄位 2</div>
+									<div class="text-xs text-gray-600 mt-1">手機: 100%<br>平板: 50%<br>桌面: 25%</div>
+								</div>
+								<div class="bg-yellow-200 p-4 rounded text-center">
+									<div class="text-sm font-medium">欄位 3</div>
+									<div class="text-xs text-gray-600 mt-1">手機: 100%<br>平板: 50%<br>桌面: 25%</div>
+								</div>
+								<div class="bg-purple-200 p-4 rounded text-center">
+									<div class="text-sm font-medium">欄位 4</div>
+									<div class="text-xs text-gray-600 mt-1">手機: 100%<br>平板: 50%<br>桌面: 25%</div>
+								</div>
+							</div>
+						</div>
+						
+						<pre class="bg-gray-800 text-white p-3 rounded text-sm">/* CSS Grid 響應式佈局 */
+		.grid-container {
+		  display: grid;
+		  gap: 1rem;
+		  grid-template-columns: 1fr; /* 手機: 單欄 */
+		}
+
+		@media (min-width: 768px) {
+		  .grid-container {
+			grid-template-columns: repeat(2, 1fr); /* 平板: 雙欄 */
+		  }
+		}
+
+		@media (min-width: 1024px) {
+		  .grid-container {
+			grid-template-columns: repeat(4, 1fr); /* 桌面: 四欄 */
+		  }
+		}</pre>
+					</div>
+
+					<!-- 響應式導覽 -->
+					<div class="mb-8">
+						<h4 class="font-bold mb-3">2. 響應式導覽列</h4>
+						<div class="border rounded-lg overflow-hidden mb-4">
+							<!-- 桌面版導覽 (在較大螢幕上顯示) -->
+							<div class="hidden md:flex bg-gray-100 p-4 justify-between items-center">
+								<div class="font-bold text-lg">LOGO</div>
+								<div class="flex space-x-6">
+									<a href="#" class="text-gray-700 hover:text-blue-600">首頁</a>
+									<a href="#" class="text-gray-700 hover:text-blue-600">產品</a>
+									<a href="#" class="text-gray-700 hover:text-blue-600">關於</a>
+									<a href="#" class="text-gray-700 hover:text-blue-600">聯繫</a>
+								</div>
+								<button class="bg-blue-500 text-white px-4 py-2 rounded">登入</button>
+							</div>
+							
+							<!-- 行動版導覽 (在小螢幕上顯示) -->
+							<div class="md:hidden bg-gray-100 p-4">
+								<div class="flex justify-between items-center mb-4">
+									<div class="font-bold text-lg">LOGO</div>
+									<button class="p-2">☰</button>
+								</div>
+								<div class="space-y-2">
+									<a href="#" class="block py-2 text-gray-700">首頁</a>
+									<a href="#" class="block py-2 text-gray-700">產品</a>
+									<a href="#" class="block py-2 text-gray-700">關於</a>
+									<a href="#" class="block py-2 text-gray-700">聯繫</a>
+									<button class="w-full bg-blue-500 text-white py-2 rounded mt-2">登入</button>
+								</div>
+							</div>
+						</div>
+
+						<pre class="bg-gray-800 text-white p-3 rounded text-sm">/* 響應式導覽列 */
+		.navbar {
+		  background-color: #f8f9fa;
+		  padding: 1rem;
+		}
+
+		/* 行動版 */
+		.navbar-menu {
+		  display: none;
+		  flex-direction: column;
+		  width: 100%;
+		}
+
+		.navbar-toggle {
+		  display: block;
+		}
+
+		/* 桌面版 */
+		@media (min-width: 768px) {
+		  .navbar-menu {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+		  }
+		  
+		  .navbar-toggle {
+			display: none;
+		  }
+		}</pre>
+					</div>
+
+					<!-- 響應式圖片 -->
+					<div class="mb-8">
+						<h4 class="font-bold mb-3">3. 響應式圖片處理</h4>
+						<div class="grid md:grid-cols-2 gap-6 mb-4">
+							<div>
+								<h5 class="font-medium mb-2">CSS 方法</h5>
+								<pre class="bg-gray-800 text-white p-3 rounded text-xs">/* 基本響應式圖片 */
+		img {
+		  max-width: 100%;
+		  height: auto;
+		}
+
+		/* 背景圖片 */
+		.hero-image {
+		  background-size: cover;
+		  background-position: center;
+		  height: 300px;
+		}
+
+		@media (min-width: 768px) {
+		  .hero-image {
+			height: 500px;
+		  }
+		}</pre>
+							</div>
+							<div>
+								<h5 class="font-medium mb-2">HTML picture 元素</h5>
+								<pre class="bg-gray-800 text-white p-3 rounded text-xs">&lt;picture&gt;
+		  &lt;source media="(min-width: 768px)" 
+				  srcset="large.jpg"&gt;
+		  &lt;source media="(min-width: 480px)" 
+				  srcset="medium.jpg"&gt;
+		  &lt;img src="small.jpg" 
+			   alt="響應式圖片"&gt;
+		&lt;/picture&gt;</pre>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- 進階技巧 -->
+				<div class="mb-10">
+					<h3 class="text-xl font-bold mb-4 text-indigo-600">🔸 進階響應式技巧</h3>
+					
+					<div class="space-y-6">
+						<!-- Container Queries -->
+						<div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg">
+							<h4 class="font-bold mb-3">Container Queries (未來技術)</h4>
+							<p class="mb-3 text-sm text-gray-700">Container Queries 讓元素能夠根據其容器的大小而非視窗大小調整樣式。</p>
+							<pre class="bg-gray-800 text-white p-3 rounded text-sm">/* Container Queries (實驗性功能) */
+		.container {
+		  container-type: inline-size;
+		}
+
+		@container (min-width: 400px) {
+		  .card {
+			display: flex;
+			gap: 1rem;
+		  }
+		}</pre>
+						</div>
+
+						<!-- CSS 自定義屬性 -->
+						<div class="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg">
+							<h4 class="font-bold mb-3">CSS 變數響應式應用</h4>
+							<pre class="bg-gray-800 text-white p-3 rounded text-sm">:root {
+		  --container-padding: 1rem;
+		  --font-size-base: 16px;
+		  --grid-columns: 1;
+		}
+
+		@media (min-width: 768px) {
+		  :root {
+			--container-padding: 2rem;
+			--font-size-base: 18px;
+			--grid-columns: 2;
+		  }
+		}
+
+		.container {
+		  padding: var(--container-padding);
+		  font-size: var(--font-size-base);
+		  grid-template-columns: repeat(var(--grid-columns), 1fr);
+		}</pre>
+						</div>
+					</div>
+				</div>
+
+				<!-- 最佳實踐 -->
+				<div class="bg-gradient-to-r from-orange-50 to-red-50 p-6 rounded-lg">
+					<h4 class="font-bold text-lg mb-4 text-orange-800">🚀 響應式設計最佳實踐</h4>
+					<div class="grid md:grid-cols-2 gap-6">
+						<div>
+							<h5 class="font-semibold mb-3 text-orange-700">設計原則</h5>
+							<ul class="text-sm space-y-2 text-orange-600">
+								<li class="flex items-start">
+									<span class="text-green-500 mr-2">✓</span>
+									<span>內容優先，功能次之</span>
+								</li>
+								<li class="flex items-start">
+									<span class="text-green-500 mr-2">✓</span>
+									<span>使用相對單位 (%, em, rem, vw, vh)</span>
+								</li>
+								<li class="flex items-start">
+									<span class="text-green-500 mr-2">✓</span>
+									<span>測試真實設備，不只是瀏覽器縮放</span>
+								</li>
+								<li class="flex items-start">
+									<span class="text-green-500 mr-2">✓</span>
+									<span>考慮觸控交互設計</span>
+								</li>
+							</ul>
+						</div>
+						<div>
+							<h5 class="font-semibold mb-3 text-orange-700">效能考量</h5>
+							<ul class="text-sm space-y-2 text-orange-600">
+								<li class="flex items-start">
+									<span class="text-green-500 mr-2">✓</span>
+									<span>優化圖片和媒體檔案</span>
+								</li>
+								<li class="flex items-start">
+									<span class="text-green-500 mr-2">✓</span>
+									<span>減少 HTTP 請求</span>
+								</li>
+								<li class="flex items-start">
+									<span class="text-green-500 mr-2">✓</span>
+									<span>使用適當的圖片格式 (WebP, AVIF)</span>
+								</li>
+								<li class="flex items-start">
+									<span class="text-green-500 mr-2">✓</span>
+									<span>考慮 Critical CSS</span>
+								</li>
+							</ul>
+						</div>
+					</div>
+
+					<div class="mt-6 p-4 bg-white rounded border-l-4 border-orange-400">
+						<h6 class="font-bold mb-2">🎯 測試檢查清單</h6>
+						<div class="grid md:grid-cols-3 gap-4 text-sm">
+							<div>
+								<strong>手機測試 (320px-767px)</strong>
+								<ul class="mt-1 space-y-1">
+									<li>• 單手操作友善</li>
+									<li>• 觸控目標 ≥ 44px</li>
+									<li>• 文字可讀性</li>
+								</ul>
+							</div>
+							<div>
+								<strong>平板測試 (768px-1023px)</strong>
+								<ul class="mt-1 space-y-1">
+									<li>• 橫向/直向佈局</li>
+									<li>• 空間利用效率</li>
+									<li>• 導覽適應性</li>
+								</ul>
+							</div>
+							<div>
+								<strong>桌面測試 (1024px+)</strong>
+								<ul class="mt-1 space-y-1">
+									<li>• 滑鼠交互設計</li>
+									<li>• 多欄佈局效果</li>
+									<li>• 高解析度顯示</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+<!-- CSS學習課程--CSS 預處理器 -->
+ <div id="lesson-preprocessors" class="lesson-content">
+    <div class="lesson-container p-8 bg-white shadow-lg rounded-lg max-w-5xl mx-auto mt-10 animate-fadeIn">
+        <div class="close-btn" onclick="closeLesson('preprocessors')">✕</div>
+        <h2 class="text-2xl font-bold mb-6 text-red-600">CSS 預處理器</h2>
+        <p class="mb-6 text-gray-600">學習 Sass 和 Less，透過變數、巢狀語法、mixins 和函數等功能，提高 CSS 的可維護性和開發效率。</p>
+
+        <!-- 課程大綱 -->
+        <div class="lesson-section mb-8">
+            <h3 class="text-xl font-bold mb-4">課程大綱</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+                <ul class="list-disc pl-6 space-y-2">
+                    <li>CSS 預處理器簡介</li>
+                    <li>Sass/SCSS 語法基礎</li>
+                    <li>變數與資料型別</li>
+                    <li>巢狀規則與選擇器</li>
+                    <li>Mixins 與函數</li>
+                    <li>繼承與擴展</li>
+                </ul>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li>條件語句與迴圈</li>
+                    <li>模組化與匯入</li>
+                    <li>內建函數應用</li>
+                    <li>Less 語法對比</li>
+                    <li>建置工具整合</li>
+                    <li>最佳實踐指南</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 預處理器簡介 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-blue-600">🔸 CSS 預處理器簡介</h3>
+            
+            <div class="bg-blue-50 p-6 rounded-lg mb-6">
+                <h4 class="font-bold mb-3">什麼是 CSS 預處理器？</h4>
+                <p class="mb-4 text-gray-700">CSS 預處理器是一種腳本語言，擴展了 CSS 的功能，讓您能夠使用變數、函數、運算等程式設計概念來撰寫樣式，最終編譯成標準的 CSS。</p>
+                
+                <div class="grid md:grid-cols-3 gap-4 mt-4">
+                    <div class="bg-white p-4 rounded border text-center">
+                        <div class="text-3xl mb-2 text-pink-500">💎</div>
+                        <h5 class="font-semibold">Sass/SCSS</h5>
+                        <p class="text-sm text-gray-600">最受歡迎的預處理器</p>
+                    </div>
+                    <div class="bg-white p-4 rounded border text-center">
+                        <div class="text-3xl mb-2 text-blue-500">🔷</div>
+                        <h5 class="font-semibold">Less</h5>
+                        <p class="text-sm text-gray-600">語法簡潔，易於學習</p>
+                    </div>
+                    <div class="bg-white p-4 rounded border text-center">
+                        <div class="text-3xl mb-2 text-green-500">🟢</div>
+                        <h5 class="font-semibold">Stylus</h5>
+                        <p class="text-sm text-gray-600">語法靈活，功能強大</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h5 class="font-semibold mb-2 text-green-800">✅ 預處理器優點</h5>
+                    <ul class="text-sm space-y-1 text-green-700">
+                        <li>• 變數管理，避免重複</li>
+                        <li>• 巢狀語法，結構清晰</li>
+                        <li>• Mixins 重用程式碼</li>
+                        <li>• 數學運算功能</li>
+                        <li>• 模組化開發</li>
+                        <li>• 程式化邏輯控制</li>
+                    </ul>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-lg">
+                    <h5 class="font-semibold mb-2 text-orange-800">⚠️ 考量事項</h5>
+                    <ul class="text-sm space-y-1 text-orange-700">
+                        <li>• 需要編譯步驟</li>
+                        <li>• 學習成本</li>
+                        <li>• 建置工具設定</li>
+                        <li>• 除錯較複雜</li>
+                        <li>• 團隊協作規範</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sass/SCSS 基礎 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-pink-600">🔸 Sass/SCSS 語法基礎</h3>
+            
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">Sass vs SCSS</h4>
+                <div class="grid md:grid-cols-2 gap-6 mb-4">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-2">Sass (縮排語法)</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">$primary-color: #3490dc
+$margin: 16px
+
+.container
+  margin: $margin
+  color: $primary-color
+  
+  .header
+    font-size: 2rem
+    font-weight: bold</pre>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-2">SCSS (大括號語法)</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">$primary-color: #3490dc;
+$margin: 16px;
+
+.container {
+  margin: $margin;
+  color: $primary-color;
+  
+  .header {
+    font-size: 2rem;
+    font-weight: bold;
+  }
+}</pre>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">💡 <strong>建議：</strong>SCSS 語法因為更接近原生 CSS，通常較受歡迎且容易學習。</p>
+            </div>
+        </div>
+
+        <!-- 變數與資料型別 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-purple-600">🔸 變數與資料型別</h3>
+            
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">變數定義與使用</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto mb-4">/* SCSS 變數語法 */
+
+// 顏色變數
+$primary-color: #3b82f6;
+$secondary-color: #10b981;
+$danger-color: #ef4444;
+$text-color: #1f2937;
+
+// 尺寸變數
+$base-font-size: 16px;
+$line-height: 1.6;
+$border-radius: 8px;
+$container-width: 1200px;
+
+// 字體變數
+$font-family-base: 'Helvetica Neue', Arial, sans-serif;
+$font-family-mono: 'Monaco', 'Courier New', monospace;
+
+// 間距變數
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+// 使用變數
+.button {
+  background-color: $primary-color;
+  color: white;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius;
+  font-family: $font-family-base;
+  
+  &:hover {
+    background-color: darken($primary-color, 10%);
+  }
+}</pre>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">資料型別</h4>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-2">基本型別</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-xs">// 數字
+$width: 100px;
+$ratio: 1.5;
+
+// 字串
+$image-path: '/assets/images/';
+$font-stack: 'Helvetica Neue';
+
+// 布林值
+$rounded: true;
+$shadow: false;
+
+// null
+$margin: null;</pre>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-2">複合型別</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-xs">// 列表
+$margins: 10px 15px 20px 25px;
+$fonts: Arial, Helvetica, sans-serif;
+
+// 對應表 (Maps)
+$breakpoints: (
+  small: 480px,
+  medium: 768px,
+  large: 1024px
+);
+
+$colors: (
+  primary: #3b82f6,
+  secondary: #10b981,
+  danger: #ef4444
+);</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">全域與區域變數</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm">// 全域變數
+$global-color: #333;
+
+.component {
+  // 區域變數
+  $local-color: #666;
+  color: $local-color;
+  
+  // 使用 !global 將區域變數變為全域
+  $border-color: #ccc !global;
+}
+
+.another-component {
+  border-color: $border-color; // 可以使用
+  // color: $local-color;      // 錯誤：無法存取區域變數
+}</pre>
+            </div>
+        </div>
+
+        <!-- 巢狀規則 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-green-600">🔸 巢狀規則與選擇器</h3>
+            
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">基本巢狀</h4>
+                <div class="grid md:grid-cols-2 gap-6 mb-4">
+                    <div>
+                        <h5 class="font-medium mb-2">SCSS 輸入</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">.navbar {
+  background-color: #fff;
+  padding: 1rem;
+  
+  .nav-item {
+    display: inline-block;
+    margin-right: 1rem;
+    
+    a {
+      text-decoration: none;
+      color: #333;
+      
+      &:hover {
+        color: #007bff;
+      }
+    }
+  }
+  
+  .nav-brand {
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+}</pre>
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">編譯後的 CSS</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">.navbar {
+  background-color: #fff;
+  padding: 1rem;
+}
+
+.navbar .nav-item {
+  display: inline-block;
+  margin-right: 1rem;
+}
+
+.navbar .nav-item a {
+  text-decoration: none;
+  color: #333;
+}
+
+.navbar .nav-item a:hover {
+  color: #007bff;
+}
+
+.navbar .nav-brand {
+  font-weight: bold;
+  font-size: 1.2rem;
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">父選擇器 (&)</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm">// & 代表父選擇器
+.button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  
+  // 偽類
+  &:hover {
+    background-color: #0056b3;
+  }
+  
+  &:active {
+    transform: translateY(1px);
+  }
+  
+  // 修飾符類別
+  &.large {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+  }
+  
+  &.danger {
+    background-color: #dc3545;
+    
+    &:hover {
+      background-color: #c82333;
+    }
+  }
+  
+  // 父元素狀態
+  .disabled & {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}</pre>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded-lg">
+                <h5 class="font-bold text-yellow-800 mb-2">⚠️ 巢狀注意事項</h5>
+                <ul class="text-sm space-y-1 text-yellow-700">
+                    <li>• 避免過度巢狀（建議不超過 3-4 層）</li>
+                    <li>• 巢狀過深會產生過於具體的選擇器</li>
+                    <li>• 影響 CSS 檔案大小和效能</li>
+                    <li>• 降低樣式的重用性</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Mixins -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-indigo-600">🔸 Mixins 與函數</h3>
+            
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">Mixin 基礎</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm overflow-x-auto mb-4">// 定義 mixin
+@mixin button-style {
+  display: inline-block;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+// 使用 mixin
+.primary-button {
+  @include button-style;
+  background-color: #007bff;
+  color: white;
+}
+
+.secondary-button {
+  @include button-style;
+  background-color: #6c757d;
+  color: white;
+}
+
+// 帶參數的 mixin
+@mixin button-variant($bg-color, $text-color: white) {
+  background-color: $bg-color;
+  color: $text-color;
+  
+  &:hover {
+    background-color: darken($bg-color, 10%);
+  }
+  
+  &:active {
+    background-color: darken($bg-color, 15%);
+  }
+}
+
+.success-button {
+  @include button-style;
+  @include button-variant(#28a745);
+}
+
+.warning-button {
+  @include button-style;
+  @include button-variant(#ffc107, #212529);
+}</pre>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">實用 Mixin 範例</h4>
+                <div class="space-y-4">
+                    <!-- 響應式 Mixin -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h5 class="font-medium mb-2">響應式斷點 Mixin</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">// 定義斷點 map
+$breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px
+);
+
+@mixin respond-to($breakpoint) {
+  $value: map-get($breakpoints, $breakpoint);
+  
+  @if $value {
+    @media (min-width: $value) {
+      @content;
+    }
+  }
+}
+
+// 使用方式
+.container {
+  padding: 15px;
+  
+  @include respond-to(md) {
+    padding: 30px;
+  }
+  
+  @include respond-to(lg) {
+    padding: 50px;
+  }
+}</pre>
+                    </div>
+
+                    <!-- Flexbox Mixin -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h5 class="font-medium mb-2">Flexbox 置中 Mixin</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">@mixin flex-center($direction: row) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: $direction;
+}
+
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+// 使用
+.hero-section {
+  @include flex-center(column);
+  height: 100vh;
+}
+
+.navbar {
+  @include flex-between;
+  padding: 1rem 2rem;
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">函數 (Functions)</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm">// 自定義函數
+@function px-to-rem($px, $base-font-size: 16px) {
+  @return ($px / $base-font-size) * 1rem;
+}
+
+@function str-replace($string, $search, $replace: '') {
+  $index: str-index($string, $search);
+  
+  @if $index {
+    @return str-slice($string, 1, $index - 1) + $replace + 
+            str-replace(str-slice($string, $index + str-length($search)), $search, $replace);
+  }
+  
+  @return $string;
+}
+
+// 使用函數
+.title {
+  font-size: px-to-rem(24px);  // 輸出: 1.5rem
+  margin-bottom: px-to-rem(16px);  // 輸出: 1rem
+}
+
+// 內建函數
+.color-variations {
+  $base-color: #3b82f6;
+  
+  background-color: $base-color;
+  border-color: darken($base-color, 20%);
+  color: lighten($base-color, 40%);
+  box-shadow: 0 2px 4px rgba($base-color, 0.3);
+}</pre>
+            </div>
+        </div>
+
+        <!-- 繼承與擴展 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-teal-600">🔸 繼承與擴展 (@extend)</h3>
+            
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">基本繼承</h4>
+                <div class="grid md:grid-cols-2 gap-6 mb-4">
+                    <div>
+                        <h5 class="font-medium mb-2">SCSS</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">// 基礎樣式
+.message {
+  border: 1px solid #ccc;
+  padding: 10px;
+  color: #333;
+}
+
+// 繼承基礎樣式
+.success {
+  @extend .message;
+  border-color: #d4edda;
+  color: #155724;
+  background-color: #d1ecf1;
+}
+
+.error {
+  @extend .message;
+  border-color: #f5c6cb;
+  color: #721c24;
+  background-color: #f8d7da;
+}
+
+.warning {
+  @extend .message;
+  border-color: #ffeaa7;
+  color: #856404;
+  background-color: #fff3cd;
+}</pre>
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">編譯後的 CSS</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">.message, .success, .error, .warning {
+  border: 1px solid #ccc;
+  padding: 10px;
+  color: #333;
+}
+
+.success {
+  border-color: #d4edda;
+  color: #155724;
+  background-color: #d1ecf1;
+}
+
+.error {
+  border-color: #f5c6cb;
+  color: #721c24;
+  background-color: #f8d7da;
+}
+
+.warning {
+  border-color: #ffeaa7;
+  color: #856404;
+  background-color: #fff3cd;
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">佔位符選擇器 (%)</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm">// 佔位符不會出現在最終的 CSS 中
+%clearfix {
+  &::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+}
+
+%visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(1px, 1px, 1px, 1px) !important;
+}
+
+// 使用佔位符
+.container {
+  @extend %clearfix;
+}
+
+.sr-only {
+  @extend %visually-hidden;
+}</pre>
+            </div>
+
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h5 class="font-bold text-blue-800 mb-2">💡 @extend vs @mixin</h5>
+                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <strong>使用 @extend 當：</strong>
+                        <ul class="mt-1 space-y-1 text-blue-700">
+                            <li>• 樣式完全相同，不需要參數</li>
+                            <li>• 想要群組選擇器，減少 CSS 大小</li>
+                            <li>• 建立語意化的樣式關係</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong>使用 @mixin 當：</strong>
+                        <ul class="mt-1 space-y-1 text-blue-700">
+                            <li>• 需要參數來自定義樣式</li>
+                            <li>• 樣式有變化或邏輯</li>
+                            <li>• 需要更靈活的重用</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模組化 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-orange-600">🔸 模組化與匯入</h3>
+            
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">檔案結構組織</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm">scss/
+├── abstracts/
+│   ├── _variables.scss
+│   ├── _mixins.scss
+│   └── _functions.scss
+├── base/
+│   ├── _reset.scss
+│   ├── _typography.scss
+│   └── _utilities.scss
+├── components/
+│   ├── _buttons.scss
+│   ├── _cards.scss
+│   └── _navigation.scss
+├── layout/
+│   ├── _header.scss
+│   ├── _footer.scss
+│   └── _grid.scss
+├── pages/
+│   ├── _home.scss
+│   └── _about.scss
+└── main.scss</pre>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">主要樣式檔 (main.scss)</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm">// main.scss - 匯入所有模組
+
+// 1. 抽象層 (不產生 CSS)
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+@import 'abstracts/functions';
+
+// 2. 基礎層
+@import 'base/reset';
+@import 'base/typography';
+@import 'base/utilities';
+
+// 3. 佈局
+@import 'layout/grid';
+@import 'layout/header';
+@import 'layout/footer';
+
+// 4. 組件
+@import 'components/buttons';
+@import 'components/cards';
+@import 'components/navigation';
+
+// 5. 頁面特定樣式
+@import 'pages/home';
+@import 'pages/about';</pre>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">變數檔案範例 (_variables.scss)</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm">// _variables.scss
+
+// 顏色系統
+$primary-color: #007bff;
+$secondary-color: #6c757d;
+$success-color: #28a745;
+$warning-color: #ffc107;
+$danger-color: #dc3545;
+$info-color: #17a2b8;
+
+// 字體
+$font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+$font-family-code: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+
+$font-size-base: 1rem;
+$font-size-lg: 1.25rem;
+$font-size-sm: 0.875rem;
+
+// 間距
+$spacer: 1rem;
+$spacers: (
+  0: 0,
+  1: $spacer * 0.25,
+  2: $spacer * 0.5,
+  3: $spacer,
+  4: $spacer * 1.5,
+  5: $spacer * 3
+);
+
+// 斷點
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px
+);
+
+// 組件變數
+$border-radius: 0.375rem;
+$border-width: 1px;
+$box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);</pre>
+            </div>
+        </div>
+
+        <!-- Less 對比 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-blue-600">🔸 Less 語法對比</h3>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-pink-50 p-4 rounded-lg">
+                    <h5 class="font-semibold mb-2 text-pink-800">Sass/SCSS</h5>
+                    <pre class="bg-gray-800 text-white p-3 rounded text-sm">// 變數
+$primary-color: #007bff;
+
+// Mixin
+@mixin border-radius($radius) {
+  border-radius: $radius;
+}
+
+// 使用
+.button {
+  @include border-radius(4px);
+  background: $primary-color;
+}
+
+// 函數
+@function double($value) {
+  @return $value * 2;
+}
+
+// 條件
+@if $theme == 'dark' {
+  background: #333;
+}</pre>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h5 class="font-semibold mb-2 text-blue-800">Less</h5>
+                    <pre class="bg-gray-800 text-white p-3 rounded text-sm">// 變數
+@primary-color: #007bff;
+
+// Mixin
+.border-radius(@radius) {
+  border-radius: @radius;
+}
+
+// 使用
+.button {
+  .border-radius(4px);
+  background: @primary-color;
+}
+
+// 函數 (內建)
+.double(@value) {
+  @result: @value * 2;
+}
+
+// 條件 (Guard)
+.theme(@theme) when (@theme = 'dark') {
+  background: #333;
+}</pre>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-bold mb-3">主要差異比較</h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left p-2">功能</th>
+                                <th class="text-left p-2">Sass/SCSS</th>
+                                <th class="text-left p-2">Less</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs">
+                            <tr class="border-b">
+                                <td class="p-2 font-medium">變數前綴</td>
+                                <td class="p-2"><code>$</code></td>
+                                <td class="p-2"><code>@</code></td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-2 font-medium">Mixin 定義</td>
+                                <td class="p-2"><code>@mixin name()</code></td>
+                                <td class="p-2"><code>.name()</code></td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-2 font-medium">Mixin 使用</td>
+                                <td class="p-2"><code>@include name()</code></td>
+                                <td class="p-2"><code>.name()</code></td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-2 font-medium">條件語句</td>
+                                <td class="p-2"><code>@if, @else</code></td>
+                                <td class="p-2"><code>when, guards</code></td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 font-medium">迴圈</td>
+                                <td class="p-2"><code>@for, @while, @each</code></td>
+                                <td class="p-2">遞歸 mixins</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最佳實踐 -->
+        <div class="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg">
+            <h4 class="font-bold text-lg mb-4 text-green-800">🚀 CSS 預處理器最佳實踐</h4>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h5 class="font-semibold mb-3 text-green-700">📁 檔案組織</h5>
+                    <ul class="text-sm space-y-2 text-green-600">
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span>使用模組化結構分類檔案</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span>partials 檔案以 _ 開頭命名</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span>建立清楚的匯入順序</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span>分離變數、mixins 和功能</span>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-3 text-blue-700">💡 撰寫規範</h5>
+                    <ul class="text-sm space-y-2 text-blue-600">
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span>變數使用語意化命名</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span>避免過度巢狀（≤ 3 層）</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span>適當使用 mixins 重用代碼</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <span>建立統一的編碼風格</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded border-l-4 border-green-400">
+                <h6 class="font-bold mb-2">🛠️ 建置工具整合</h6>
+                <div class="grid md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <strong>Webpack</strong>
+                        <p class="text-gray-600 mt-1">sass-loader, css-loader</p>
+                    </div>
+                    <div>
+                        <strong>Vite</strong>
+                        <p class="text-gray-600 mt-1">內建 Sass 支援</p>
+                    </div>
+                    <div>
+                        <strong>Gulp</strong>
+                        <p class="text-gray-600 mt-1">gulp-sass 插件</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- CSS學習課程--CSS 最佳實踐 -->
+<div id="lesson-bestpractices" class="lesson-content">
+    <div class="lesson-container p-8 bg-white shadow-lg rounded-lg max-w-5xl mx-auto mt-10 animate-fadeIn">
+        <div class="close-btn" onclick="closeLesson('bestpractices')">✕</div>
+        <h2 class="text-2xl font-bold mb-6 text-indigo-600">CSS 最佳實踐</h2>
+        <p class="mb-6 text-gray-600">學習 CSS 架構方法論、命名規範和優化技巧，編寫高質量、可維護且易於擴展的 CSS 代碼。</p>
+
+        <!-- 課程大綱 -->
+        <div class="lesson-section mb-8">
+            <h3 class="text-xl font-bold mb-4">課程大綱</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+                <ul class="list-disc pl-6 space-y-2">
+                    <li>CSS 架構方法論 (BEM, OOCSS, SMACSS)</li>
+                    <li>命名規範與約定</li>
+                    <li>代碼組織與結構</li>
+                    <li>選擇器優化策略</li>
+                    <li>性能優化技巧</li>
+                    <li>可維護性原則</li>
+                </ul>
+                <ul class="list-disc pl-6 space-y-2">
+                    <li>模組化設計思維</li>
+                    <li>團隊協作規範</li>
+                    <li>工具鏈與自動化</li>
+                    <li>常見陷阱與解決方案</li>
+                    <li>現代 CSS 特性應用</li>
+                    <li>代碼審查清單</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CSS 架構方法論 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-blue-600">🔸 CSS 架構方法論</h3>
+            
+            <!-- BEM -->
+            <div class="mb-8">
+                <h4 class="font-bold mb-3 text-lg">BEM (Block Element Modifier)</h4>
+                <div class="bg-blue-50 p-6 rounded-lg mb-4">
+                    <p class="mb-4 text-gray-700">BEM 是最受歡迎的 CSS 命名方法論，將 UI 分為獨立的塊 (Block)、元素 (Element) 和修飾符 (Modifier)。</p>
+                    
+                    <div class="grid md:grid-cols-3 gap-4 mb-4">
+                        <div class="bg-white p-4 rounded border">
+                            <h5 class="font-semibold text-blue-600 mb-2">Block 塊</h5>
+                            <p class="text-sm text-gray-600 mb-2">獨立的功能組件</p>
+                            <code class="text-xs bg-gray-100 px-2 py-1 rounded">.card</code>
+                        </div>
+                        <div class="bg-white p-4 rounded border">
+                            <h5 class="font-semibold text-green-600 mb-2">Element 元素</h5>
+                            <p class="text-sm text-gray-600 mb-2">塊的組成部分</p>
+                            <code class="text-xs bg-gray-100 px-2 py-1 rounded">.card__title</code>
+                        </div>
+                        <div class="bg-white p-4 rounded border">
+                            <h5 class="font-semibold text-purple-600 mb-2">Modifier 修飾符</h5>
+                            <p class="text-sm text-gray-600 mb-2">改變外觀或行為</p>
+                            <code class="text-xs bg-gray-100 px-2 py-1 rounded">.card--large</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h5 class="font-medium mb-2">HTML 結構</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">&lt;div class="card card--featured"&gt;
+  &lt;img class="card__image" src="..."&gt;
+  &lt;div class="card__content"&gt;
+    &lt;h3 class="card__title"&gt;標題&lt;/h3&gt;
+    &lt;p class="card__description"&gt;描述&lt;/p&gt;
+    &lt;button class="card__button card__button--primary"&gt;
+      按鈕
+    &lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-2">CSS 樣式</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* Block */
+.card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Element */
+.card__image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.card__content {
+  padding: 16px;
+}
+
+.card__title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+/* Modifier */
+.card--featured {
+  border-color: #007bff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}</pre>
+                    </div>
+                </div>
+
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h6 class="font-bold text-green-800 mb-2">✅ BEM 優點</h6>
+                    <ul class="text-sm space-y-1 text-green-700">
+                        <li>• 命名清晰，容易理解組件結構</li>
+                        <li>• 避免樣式衝突</li>
+                        <li>• 組件獨立，易於重用</li>
+                        <li>• 便於維護和擴展</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- OOCSS -->
+            <div class="mb-8">
+                <h4 class="font-bold mb-3 text-lg">OOCSS (Object-Oriented CSS)</h4>
+                <div class="bg-green-50 p-6 rounded-lg mb-4">
+                    <p class="mb-4 text-gray-700">OOCSS 將 CSS 視為物件導向程式設計，強調分離結構和外觀、容器和內容。</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h5 class="font-semibold mb-2">原則 1：分離結構和外觀</h5>
+                            <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* 結構 */
+.btn {
+  display: inline-block;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 外觀 */
+.btn-primary { background: #007bff; color: white; }
+.btn-secondary { background: #6c757d; color: white; }
+.btn-success { background: #28a745; color: white; }</pre>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold mb-2">原則 2：分離容器和內容</h5>
+                            <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* 避免依賴位置的樣式 */
+/* ❌ 不好的做法 */
+.sidebar h3 { color: blue; }
+
+/* ✅ 好的做法 */
+.title-blue { color: blue; }
+
+/* 使用 */
+&lt;h3 class="title-blue"&gt;標題&lt;/h3&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SMACSS -->
+            <div class="mb-8">
+                <h4 class="font-bold mb-3 text-lg">SMACSS (Scalable and Modular Architecture)</h4>
+                <div class="bg-purple-50 p-6 rounded-lg">
+                    <p class="mb-4 text-gray-700">SMACSS 將 CSS 分為五個類別，提供清晰的組織結構。</p>
+                    
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="bg-white p-3 rounded border">
+                            <h6 class="font-semibold text-purple-600">Base 基礎</h6>
+                            <p class="text-xs text-gray-600 mt-1">HTML 元素的預設樣式</p>
+                            <code class="text-xs">html, body, h1, p</code>
+                        </div>
+                        <div class="bg-white p-3 rounded border">
+                            <h6 class="font-semibold text-blue-600">Layout 佈局</h6>
+                            <p class="text-xs text-gray-600 mt-1">主要區域的佈局</p>
+                            <code class="text-xs">.l-header, .l-sidebar</code>
+                        </div>
+                        <div class="bg-white p-3 rounded border">
+                            <h6 class="font-semibold text-green-600">Module 模組</h6>
+                            <p class="text-xs text-gray-600 mt-1">可重用的組件</p>
+                            <code class="text-xs">.card, .button</code>
+                        </div>
+                        <div class="bg-white p-3 rounded border">
+                            <h6 class="font-semibold text-orange-600">State 狀態</h6>
+                            <p class="text-xs text-gray-600 mt-1">元素的狀態變化</p>
+                            <code class="text-xs">.is-active, .is-hidden</code>
+                        </div>
+                        <div class="bg-white p-3 rounded border">
+                            <h6 class="font-semibold text-red-600">Theme 主題</h6>
+                            <p class="text-xs text-gray-600 mt-1">視覺主題相關</p>
+                            <code class="text-xs">.theme-dark</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 命名規範 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-green-600">🔸 命名規範與約定</h3>
+            
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">語意化命名</h4>
+                <div class="grid md:grid-cols-2 gap-6 mb-4">
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-2 text-red-800">❌ 避免的命名</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* 基於外觀的命名 */
+.red-text { color: red; }
+.big-box { font-size: 24px; }
+.left-column { float: left; }
+
+/* 無意義的命名 */
+.div1, .content2, .box-a
+
+/* 過於抽象 */
+.thing, .stuff, .item</pre>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-2 text-green-800">✅ 推薦的命名</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* 基於功能的命名 */
+.error-message { color: red; }
+.page-title { font-size: 24px; }
+.sidebar { float: left; }
+
+/* 語意化命名 */
+.navigation, .article-content, .user-profile
+
+/* 描述性命名 */
+.search-form, .product-card, .testimonial</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">命名約定規則</h4>
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h5 class="font-semibold mb-2">基本規則</h5>
+                            <ul class="text-sm space-y-1">
+                                <li>• 使用小寫字母</li>
+                                <li>• 使用連字符 (-) 分隔單詞</li>
+                                <li>• 避免縮寫，除非是常見縮寫</li>
+                                <li>• 保持一致的命名風格</li>
+                                <li>• 名稱應該是自我解釋的</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold mb-2">前綴約定</h5>
+                            <ul class="text-sm space-y-1">
+                                <li>• <code>.l-</code> 佈局相關</li>
+                                <li>• <code>.c-</code> 組件</li>
+                                <li>• <code>.u-</code> 工具類</li>
+                                <li>• <code>.is-</code> 狀態</li>
+                                <li>• <code>.js-</code> JavaScript 掛鉤</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 選擇器優化 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-red-600">🔸 選擇器優化策略</h3>
+            
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">優先級管理</h4>
+                <div class="bg-yellow-50 p-6 rounded-lg mb-4">
+                    <h5 class="font-semibold mb-3">CSS 優先級順序</h5>
+                    <div class="grid md:grid-cols-4 gap-3 mb-4">
+                        <div class="bg-white p-3 rounded border text-center">
+                            <div class="text-2xl mb-1">🔴</div>
+                            <div class="font-semibold text-sm">!important</div>
+                            <div class="text-xs text-gray-600">最高優先級</div>
+                        </div>
+                        <div class="bg-white p-3 rounded border text-center">
+                            <div class="text-2xl mb-1">🔵</div>
+                            <div class="font-semibold text-sm">Inline Style</div>
+                            <div class="text-xs text-gray-600">1000</div>
+                        </div>
+                        <div class="bg-white p-3 rounded border text-center">
+                            <div class="text-2xl mb-1">🟢</div>
+                            <div class="font-semibold text-sm">ID</div>
+                            <div class="text-xs text-gray-600">100</div>
+                        </div>
+                        <div class="bg-white p-3 rounded border text-center">
+                            <div class="text-2xl mb-1">🟡</div>
+                            <div class="font-semibold text-sm">Class/Attr</div>
+                            <div class="text-xs text-gray-600">10</div>
+                        </div>
+                    </div>
+                    
+                    <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* 優先級計算範例 */
+p                    /* 1 (1個元素) */
+.nav                 /* 10 (1個class) */
+#header              /* 100 (1個ID) */
+.nav .item           /* 20 (2個class) */
+#header .nav .item   /* 120 (1個ID + 2個class) */
+
+/* ❌ 避免使用 !important */
+.text { color: blue !important; }
+
+/* ✅ 使用更具體的選擇器 */
+.article .text { color: blue; }</pre>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">選擇器效能</h4>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-2 text-red-800">❌ 低效的選擇器</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* 通用選擇器 */
+* { margin: 0; }
+
+/* 過於複雜的巢狀 */
+.nav ul li a span { color: blue; }
+
+/* 屬性選擇器 */
+input[type="text"] { border: 1px solid #ccc; }
+
+/* 後代選擇器 */
+.container div p span { font-weight: bold; }</pre>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h5 class="font-semibold mb-2 text-green-800">✅ 高效的選擇器</h5>
+                        <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* ID 選擇器 */
+#header { background: white; }
+
+/* Class 選擇器 */
+.nav-link { color: blue; }
+
+/* 子選擇器 */
+.nav > .nav-item { display: inline-block; }
+
+/* 直接類別 */
+.highlight-text { font-weight: bold; }</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 性能優化 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-orange-600">🔸 性能優化技巧</h3>
+            
+            <div class="space-y-6">
+                <!-- CSS 大小優化 -->
+                <div class="bg-orange-50 p-6 rounded-lg">
+                    <h4 class="font-bold mb-3">CSS 檔案大小優化</h4>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h5 class="font-semibold mb-2">壓縮與最小化</h5>
+                            <ul class="text-sm space-y-1">
+                                <li>• 移除空白字符和註釋</li>
+                                <li>• 合併相同的規則</li>
+                                <li>• 簡化選擇器</li>
+                                <li>• 使用短屬性語法</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold mb-2">工具推薦</h5>
+                            <ul class="text-sm space-y-1">
+                                <li>• <strong>cssnano</strong> - 自動優化</li>
+                                <li>• <strong>PurgeCSS</strong> - 移除未使用樣式</li>
+                                <li>• <strong>PostCSS</strong> - 後處理優化</li>
+                                <li>• <strong>webpack</strong> - 建置時優化</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 載入策略 -->
+                <div class="bg-blue-50 p-6 rounded-lg">
+                    <h4 class="font-bold mb-3">載入策略優化</h4>
+                    <pre class="bg-gray-800 text-white p-4 rounded text-sm">/* Critical CSS - 關鍵渲染路徑 */
+&lt;style&gt;
+/* 內聯關鍵 CSS */
+body { font-family: Arial, sans-serif; }
+.header { background: #fff; }
+&lt;/style&gt;
+
+&lt;!-- 延遲載入非關鍵 CSS --&gt;
+&lt;link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'"&gt;
+
+&lt;!-- 字體預載入 --&gt;
+&lt;link rel="preload" href="font.woff2" as="font" type="font/woff2" crossorigin&gt;</pre>
+                </div>
+
+                <!-- CSS 規則優化 -->
+                <div class="bg-green-50 p-6 rounded-lg">
+                    <h4 class="font-bold mb-3">CSS 規則優化</h4>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h5 class="font-medium mb-2">簡化屬性</h5>
+                            <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* ❌ 冗長寫法 */
+margin-top: 10px;
+margin-right: 20px;
+margin-bottom: 10px;
+margin-left: 20px;
+
+/* ✅ 簡寫 */
+margin: 10px 20px;</pre>
+                        </div>
+                        <div>
+                            <h5 class="font-medium mb-2">合併規則</h5>
+                            <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* ❌ 分散的規則 */
+.btn { padding: 10px; }
+.btn { margin: 5px; }
+.btn { border: 1px solid #ccc; }
+
+/* ✅ 合併規則 */
+.btn {
+  padding: 10px;
+  margin: 5px;
+  border: 1px solid #ccc;
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模組化設計 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-purple-600">🔸 模組化設計思維</h3>
+            
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">組件化開發</h4>
+                <div class="bg-purple-50 p-6 rounded-lg mb-4">
+                    <p class="mb-4 text-gray-700">將 UI 拆分為獨立、可重用的組件，每個組件負責特定的功能。</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h5 class="font-medium mb-2">組件設計原則</h5>
+                            <ul class="text-sm space-y-1">
+                                <li>• <strong>單一職責</strong> - 每個組件只做一件事</li>
+                                <li>• <strong>高內聚</strong> - 相關功能聚集在一起</li>
+                                <li>• <strong>低耦合</strong> - 組件間依賴最小化</li>
+                                <li>• <strong>可配置</strong> - 通過參數調整行為</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 class="font-medium mb-2">組件範例</h5>
+                            <pre class="bg-gray-800 text-white p-3 rounded text-xs">/* 按鈕組件 */
+.btn {
+  /* 基礎樣式 */
+}
+
+.btn--primary { /* 主要按鈕變體 */ }
+.btn--secondary { /* 次要按鈕變體 */ }
+.btn--large { /* 大尺寸修飾符 */ }
+.btn--small { /* 小尺寸修飾符 */ }</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="font-bold mb-3">設計系統整合</h4>
+                <pre class="bg-gray-800 text-white p-4 rounded text-sm">/* 設計系統變數 */
+:root {
+  /* 顏色系統 */
+  --color-primary: #007bff;
+  --color-secondary: #6c757d;
+  --color-success: #28a745;
+  --color-danger: #dc3545;
+  
+  /* 間距系統 */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 3rem;
+  
+  /* 字體系統 */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  
+  /* 圓角系統 */
+  --border-radius-sm: 0.125rem;
+  --border-radius: 0.25rem;
+  --border-radius-lg: 0.5rem;
+  --border-radius-xl: 1rem;
+}
+
+/* 使用設計系統 */
+.card {
+  padding: var(--space-md);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-base);
+  border-radius: var(--border-radius);
+  background-color: var(--color-primary);
+}</pre>
+            </div>
+        </div>
+
+        <!-- 團隊協作 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-teal-600">🔸 團隊協作規範</h3>
+            
+            <div class="space-y-6">
+                <!-- 代碼風格 -->
+                <div class="bg-teal-50 p-6 rounded-lg">
+                    <h4 class="font-bold mb-3">代碼風格統一</h4>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h5 class="font-medium mb-2">格式化規則</h5>
+                            <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* 推薦的格式化風格 */
+.selector {
+  property: value;
+  another-property: value;
+}
+
+/* 多個選擇器 */
+.selector-1,
+.selector-2,
+.selector-3 {
+  property: value;
+}
+
+/* 註釋格式 */
+/* ==========================================================================
+   組件名稱
+   ========================================================================== */
+
+/**
+ * 組件描述
+ * 1. 說明特殊處理的原因
+ */</pre>
+                        </div>
+                        <div>
+                            <h5 class="font-medium mb-2">工具配置</h5>
+                            <pre class="bg-gray-800 text-white p-3 rounded text-sm">/* .stylelintrc.js */
+module.exports = {
+  extends: [
+    "stylelint-config-standard",
+    "stylelint-config-prettier"
+  ],
+  rules: {
+    "indentation": 2,
+    "string-quotes": "single",
+    "no-duplicate-selectors": true,
+    "color-hex-case": "lower",
+    "color-hex-length": "short",
+    "selector-max-id": 0,
+    "selector-combinator-space-after": "always",
+    "selector-attribute-quotes": "always",
+    "declaration-colon-space-after": "always",
+    "declaration-colon-space-before": "never",
+    "block-opening-brace-space-before": "always"
+  }
+};</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 文檔化 -->
+                <div class="bg-blue-50 p-6 rounded-lg">
+                    <h4 class="font-bold mb-3">文檔與註釋</h4>
+                    <pre class="bg-gray-800 text-white p-4 rounded text-sm">/**
+ * 卡片組件
+ * 
+ * 用於顯示結構化內容的容器組件
+ * 
+ * @example
+ * &lt;div class="card card--highlighted"&gt;
+ *   &lt;div class="card__header"&gt;標題&lt;/div&gt;
+ *   &lt;div class="card__body"&gt;內容&lt;/div&gt;
+ * &lt;/div&gt;
+ */
+.card {
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/**
+ * 卡片標題區域
+ * 1. 使用 flexbox 讓內容垂直置中
+ */
+.card__header {
+  padding: 16px;
+  background: #f8f9fa;
+  display: flex; /* 1 */
+  align-items: center; /* 1 */
+}
+
+/**
+ * 強調變體
+ * 用於重要內容的突出顯示
+ */
+.card--highlighted {
+  border-color: #007bff;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 常見陷阱 -->
+        <div class="mb-10">
+            <h3 class="text-xl font-bold mb-4 text-red-600">🔸 常見陷阱與解決方案</h3>
+            
+            <div class="space-y-4">
+                <div class="border border-red-200 rounded-lg overflow-hidden">
+                    <div class="bg-red-50 p-4 border-b border-red-200">
+                        <h5 class="font-bold text-red-800">❌ 全域污染</h5>
+                    </div>
+                    <div class="p-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-2">問題：</p>
+                                <pre class="bg-gray-800 text-white p-2 rounded text-xs">/* 過於通用的樣式 */
+h3 { color: blue; }
+.content p { margin-bottom: 20px; }</pre>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-2">解決：</p>
+                                <pre class="bg-gray-800 text-white p-2 rounded text-xs">/* 使用特定的類別 */
+.article__title { color: blue; }
+.article__paragraph { margin-bottom: 20px; }</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border border-red-200 rounded-lg overflow-hidden">
+                    <div class="bg-red-50 p-4 border-b border-red-200">
+                        <h5 class="font-bold text-red-800">❌ 過度使用 !important</h5>
+                    </div>
+                    <div class="p-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-2">問題：</p>
+                                <pre class="bg-gray-800 text-white p-2 rounded text-xs">.text { color: blue !important; }
+.highlight { color: red !important; }</pre>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-2">解決：</p>
+                                <pre class="bg-gray-800 text-white p-2 rounded text-xs">/* 使用更具體的選擇器 */
+.article .text { color: blue; }
+.article .text.highlight { color: red; }</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border border-red-200 rounded-lg overflow-hidden">
+                    <div class="bg-red-50 p-4 border-b border-red-200">
+                        <h5 class="font-bold text-red-800">❌ 硬編碼數值</h5>
+                    </div>
+                    <div class="p-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-2">問題：</p>
+                                <pre class="bg-gray-800 text-white p-2 rounded text-xs">.card { margin: 16px; }
+.button { padding: 12px 24px; }
+.header { height: 64px; }</pre>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 mb-2">解決：</p>
+                                <pre class="bg-gray-800 text-white p-2 rounded text-xs">/* 使用 CSS 變數 */
+.card { margin: var(--space-md); }
+.button { padding: var(--space-sm) var(--space-lg); }
+.header { height: var(--header-height); }</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 代碼審查清單 -->
+        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-lg">
+            <h4 class="font-bold text-lg mb-4 text-indigo-800">📋 CSS 代碼審查清單</h4>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h5 class="font-semibold mb-3 text-indigo-700">代碼品質</h5>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2" checked disabled>
+                            <span>使用語意化的類別名稱</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2" checked disabled>
+                            <span>遵循命名規範 (BEM/OOCSS)</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2" checked disabled>
+                            <span>避免使用 !important</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2" checked disabled>
+                            <span>選擇器具體性合理</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2" checked disabled>
+                            <span>沒有未使用的樣式</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-3 text-purple-700">維護性</h5>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2" checked disabled>
+                            <span>使用 CSS 變數管理設計系統</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2" checked disabled>
+                            <span>組件獨立且可重用</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2" checked disabled>
+                            <span>註釋清楚且有意義</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2" checked disabled>
+                            <span>檔案結構清晰</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="mr-2" checked disabled>
+                            <span>響應式設計適當</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-white rounded border-l-4 border-indigo-400">
+                <h6 class="font-bold mb-2">🎯 最終檢查</h6>
+                <div class="grid md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <strong>效能</strong>
+                        <p class="text-gray-600 mt-1">檔案大小、載入速度</p>
+                    </div>
+                    <div>
+                        <strong>相容性</strong>
+                        <p class="text-gray-600 mt-1">瀏覽器支援、降級方案</p>
+                    </div>
+                    <div>
+                        <strong>可訪問性</strong>
+                        <p class="text-gray-600 mt-1">顏色對比、鍵盤導覽</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- 關於我們彈出視窗 -->
+    <div id="about-us" class="lesson-content">
+        <div class="lesson-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closeAboutUs()">✕</div>
+            <h2 class="text-2xl font-bold mb-6">關於我們</h2>
+            
+            <div class="mb-8">
+                <p class="mb-4">CSS 學習中心是一個專注於幫助初學者和進階開發者掌握 CSS 技能的教育平台。我們提供互動式學習體驗，讓您能夠邊學邊練，快速提升網頁設計能力。</p>
+                
+                <h3 class="text-xl font-bold mb-4 mt-6">我們的使命</h3>
+                <p class="mb-4">我們的使命是讓 CSS 學習變得簡單、有趣且高效。通過提供高質量的教程、實例和互動工具，我們希望幫助更多人掌握網頁設計技能，創建美觀且功能強大的網站。</p>
+                
+                <h3 class="text-xl font-bold mb-4 mt-6">聯繫我們</h3>
+                <p>如果您有任何問題、建議或合作意向，請通過以下方式聯繫我們：</p>
+                <ul class="list-disc pl-6 mt-2">
+                    <li>電子郵件：hs3591@gses.hcc.edu.tw</li>
+                    <li>新竹縣關西國小資訊組</li>
+                    <li>地址：關西鎮西安里中山路126號</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 屬性詳情彈出視窗 -->
+    <div id="property-colors" class="lesson-content">
+        <div class="lesson-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closePropertyDetails('colors')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">顏色與背景屬性</h2>
+            
+            <div class="mb-8">
+                <h3 class="text-xl font-bold mb-4">顏色值表示方法</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">顏色名稱</h4>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="h-10 bg-red-500 rounded flex items-center justify-center text-white text-sm">red</div>
+                            <div class="h-10 bg-blue-500 rounded flex items-center justify-center text-white text-sm">blue</div>
+                            <div class="h-10 bg-green-500 rounded flex items-center justify-center text-white text-sm">green</div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">十六進制</h4>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="h-10 bg-red-500 rounded flex items-center justify-center text-white text-sm">#ff0000</div>
+                            <div class="h-10 bg-blue-500 rounded flex items-center justify-center text-white text-sm">#0000ff</div>
+                            <div class="h-10 bg-green-500 rounded flex items-center justify-center text-white text-sm">#00ff00</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="text-xl font-bold mb-4">常用顏色屬性</h3>
+                <div class="bg-gray-100 p-6 rounded-lg mb-6">
+                    <h4 class="font-bold mb-2">color</h4>
+                    <p class="mb-4">設置文字的顏色。</p>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg overflow-auto text-sm">color: blue;
+color: #ff0000;
+color: rgb(0, 255, 0);</pre>
+                    
+                    <h4 class="font-bold mb-4 mt-6">background-color</h4>
+                    <p class="mb-4">設置元素的背景顏色。</p>
+                    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg overflow-auto text-sm">background-color: yellow;
+background-color: #00ff00;
+background-color: rgba(0, 0, 255, 0.5);</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 其他屬性詳情窗口可以繼續添加 -->
+    <div id="property-text" class="lesson-content">
+        <div class="lesson-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closePropertyDetails('text')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">文字樣式屬性</h2>
+            
+            <div class="bg-gray-100 p-6 rounded-lg">
+                <h3 class="font-bold mb-4">常用文字屬性</h3>
+                <ul class="list-disc pl-6 space-y-2 text-gray-700">
+                    <li><strong>font-size：</strong> 設定文字大小。</li>
+                    <li><strong>font-weight：</strong> 設定文字粗細，例如 normal、bold、數值。</li>
+                    <li><strong>text-align：</strong> 文字對齊（left、center、right、justify）。</li>
+                    <li><strong>line-height：</strong> 行距。</li>
+                    <li><strong>letter-spacing：</strong> 字距。</li>
+                    <li><strong>text-decoration：</strong> 裝飾線（如 underline、line-through）。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="property-borders" class="lesson-content">
+        <div class="lesson-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closePropertyDetails('borders')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">邊框與圓角屬性</h2>
+            
+            <div class="bg-gray-100 p-6 rounded-lg">
+                <h3 class="font-bold mb-4">邊框相關屬性</h3>
+                <h4 class="font-bold mb-2">border</h4>
+                <p class="mb-4">設定整個元素的邊框（線條粗細、樣式與顏色）。</p>
+                <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">border: 2px solid #3b82f6; /* 2 像素實線，藍色邊框 */
+border: 1px dashed #f87171; /* 虛線紅色邊框 */</pre>
+
+                <h4 class="font-bold mb-2">border-radius</h4>
+                <p class="mb-4">設定元素的圓角大小，可以做出柔和的外觀。</p>
+                <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg">border-radius: 8px; /* 四個角都是 8px 圓角 */
+border-radius: 50%; /* 製作圓形（通常用在正方形元素上） */</pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="property-spacing" class="lesson-content">
+        <div class="lesson-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closePropertyDetails('spacing')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">間距與大小屬性</h2>
+            
+            <div class="bg-gray-100 p-6 rounded-lg">
+                <h3 class="font-bold mb-4">外邊距 (margin)</h3>
+                <p class="mb-4">控制元素與其他元素之間的距離。</p>
+                <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">margin: 20px;              /* 四邊都 20px */
+margin: 10px 15px;         /* 上下 10px，左右 15px */
+margin-top: 10px;</pre>
+
+                <h3 class="font-bold mb-4">內邊距 (padding)</h3>
+                <p class="mb-4">控制元素內容與邊框之間的距離。</p>
+                <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg">padding: 16px;
+padding: 10px 20px;         /* 上下 10px，左右 20px */
+padding-bottom: 12px;</pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="property-flexbox" class="lesson-content">
+        <div class="lesson-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closePropertyDetails('flexbox')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">彈性盒子（Flexbox）</h2>
+
+            <div class="bg-gray-100 p-6 rounded-lg">
+                <h3 class="font-bold mb-4">主要屬性說明（父元素）</h3>
+                <h4 class="font-bold mb-2">display: flex</h4>
+                <p class="mb-4">啟用彈性盒模型。</p>
+                <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">.container {
+  display: flex;
+}</pre>
+
+                <h4 class="font-bold mb-2">justify-content</h4>
+                <p class="mb-4">設定主軸（如橫向）上的對齊方式。</p>
+                <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg">justify-content: center;         /* 置中 */
+justify-content: space-between;  /* 兩端對齊 */</pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="property-animations" class="lesson-content">
+        <div class="lesson-container p-8 animate-fadeIn">
+            <div class="close-btn" onclick="closePropertyDetails('animations')">✕</div>
+            <h2 class="text-2xl font-bold mb-6">動畫與過渡屬性</h2>
+
+            <div class="bg-gray-100 p-6 rounded-lg">
+                <h3 class="font-bold mb-4">過渡效果（transition）</h3>
+                <p class="mb-4">當屬性變化時，添加平滑的動畫效果。</p>
+                <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg mb-4">.button {
+  background-color: #3b82f6;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #2563eb;
+}</pre>
+
+                <h3 class="font-bold mb-4">動畫（@keyframes & animation）</h3>
+                <p class="mb-4">使用 `@keyframes` 定義動畫。</p>
+                <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg">@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.box {
+  animation: bounce 1s ease infinite;
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頁腳 -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">CSS 學習中心</h3>
+                    <p class="text-gray-400">提供互動式 CSS 學習體驗，幫助您掌握網頁設計技能。</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-medium mb-4">學習資源</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-blue-400 transition" onclick="switchTab('lessons'); return false;">課程</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition" onclick="switchTab('editor'); return false;">編輯器</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition" onclick="switchTab('examples'); return false;">範例庫</a></li>
+                        
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-medium mb-4">關於我們</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-blue-400 transition" onclick="showAboutUs(); return false;">關於</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition" onclick="showFAQ(); return false;">常見問題</a></li>
+                        
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-medium mb-4">設計者：Vincent Wang</h4>
+                    <p class="text-gray-400 mb-4">結合Canva、Claudei和ChatGpt改寫而成</p>
+                    <li><a href="https://www.w3schools.com/css/default.asp "target=_blank" class="hover:text-blue-400 transition" >CSS 參考網站</a></li>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2025 CSS 學習中心</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 全局變量
+        let currentLessonIndex = 0;
+        const totalLessons = 10;
+
+        // 即時 CSS 編輯器功能
+        const cssEditor = document.getElementById('css-code');
+        const previewStyle = document.getElementById('preview-style');
+        
+        function updatePreview() {
+            if (previewStyle && cssEditor) {
+                previewStyle.textContent = cssEditor.value;
+            }
+        }
+        
+        // 動畫預覽功能
+        function updateAnimationPreview() {
+            const animationCSS = document.getElementById('animation-css').value;
+            const previewStyle = document.getElementById('animation-preview-style');
+            if (previewStyle) {
+                previewStyle.textContent = animationCSS;
+            }
+        }
+        
+        // 初始化預覽
+        if (cssEditor) {
+            updatePreview();
+            cssEditor.addEventListener('input', updatePreview);
+        }
+        
+        // 標籤頁切換功能
+        function switchTab(tabId) {
+            // 移除所有活動狀態
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 設置當前活動標籤
+            const tabButton = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+            const tabContent = document.getElementById(tabId);
+            
+            if (tabButton && tabContent) {
+                tabButton.classList.add('active');
+                tabContent.classList.add('active');
+            }
+            
+            // 滾動到頂部
+            const tabContainer = document.querySelector('.tab-button');
+            if (tabContainer) {
+                window.scrollTo({
+                    top: tabContainer.offsetTop - 100,
+                    behavior: 'smooth'
+                });
+            }
+        }
+        
+        // 範例功能
+        function showExample(exampleId) {
+            const example = document.getElementById(`example-${exampleId}`);
+            if (example) {
+                example.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeExample(exampleId) {
+            const example = document.getElementById(`example-${exampleId}`);
+            if (example) {
+                example.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // 課程功能
+        function showLesson(lessonId) {
+            const lesson = document.getElementById(`lesson-${lessonId}`);
+            if (lesson) {
+                lesson.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                
+                // 如果是基礎課程，重置到第一課
+                if (lessonId === 'basics') {
+                    currentLessonIndex = 0;
+                    updateLessonDisplay();
+                }
+            }
+        }
+        
+        function closeLesson(lessonId) {
+            const lesson = document.getElementById(`lesson-${lessonId}`);
+            if (lesson) {
+                lesson.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // 課程導航功能
+        function updateLessonDisplay() {
+            const lessonSections = document.querySelectorAll('#lesson-basics .lesson-section[data-lesson]');
+            const prevBtn = document.getElementById('prev-lesson');
+            const nextBtn = document.getElementById('next-lesson');
+            const counter = document.getElementById('lesson-counter');
+            
+            // 隱藏所有課程內容
+            lessonSections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // 顯示當前課程
+            const currentSection = document.querySelector(`#lesson-basics .lesson-section[data-lesson="${currentLessonIndex}"]`);
+            if (currentSection) {
+                currentSection.style.display = 'block';
+            }
+            
+            // 更新按鈕狀態
+            if (prevBtn) prevBtn.disabled = currentLessonIndex === 0;
+            if (nextBtn) nextBtn.disabled = currentLessonIndex >= totalLessons - 1;
+            
+            // 更新計數器
+            if (counter) {
+                counter.textContent = `第 ${currentLessonIndex + 1} 課 / 共 ${totalLessons} 課`;
+            }
+        }
+        
+        function previousLesson() {
+            if (currentLessonIndex > 0) {
+                currentLessonIndex--;
+                updateLessonDisplay();
+            }
+        }
+        
+        function nextLesson() {
+            if (currentLessonIndex < totalLessons - 1) {
+                currentLessonIndex++;
+                updateLessonDisplay();
+            }
+        }
+        
+        // 屬性詳情功能
+        function showPropertyDetails(propertyId) {
+            const property = document.getElementById(`property-${propertyId}`);
+            if (property) {
+                property.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closePropertyDetails(propertyId) {
+            const property = document.getElementById(`property-${propertyId}`);
+            if (property) {
+                property.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // 關於我們功能
+        function showAboutUs() {
+            const aboutUs = document.getElementById('about-us');
+            if (aboutUs) {
+                aboutUs.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeAboutUs() {
+            const aboutUs = document.getElementById('about-us');
+            if (aboutUs) {
+                aboutUs.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // 行動選單功能
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            if (mobileMenu) {
+                if (mobileMenu.style.display === 'block') {
+                    mobileMenu.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                } else {
+                    mobileMenu.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+        }
+        
+        // 滾動到頂部
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+        // 常見問題功能
+        function showFAQ() {
+            alert('常見問題頁面即將推出！\n\n如果您有任何問題，請隨時聯繫我們的客服團隊。');
+        }
+        
+        // 標籤頁切換功能
+        function initNavigationTabs() {
+            const tabButtons = document.querySelectorAll('.nav-tab-btn');
+            const tabContents = document.querySelectorAll('.nav-tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // 移除所有活動狀態
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active', 'bg-white', 'text-blue-600', 'border-blue-600');
+                        btn.classList.add('text-gray-600', 'border-transparent');
+                    });
+                    
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        content.classList.add('hidden');
+                    });
+                    
+                    // 設置當前活動標籤
+                    this.classList.add('active', 'bg-white', 'text-blue-600', 'border-blue-600');
+                    this.classList.remove('text-gray-600', 'border-transparent');
+                    
+                    // 顯示對應內容
+                    const targetContent = document.getElementById(targetTab);
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                        targetContent.classList.remove('hidden');
+                    }
+                });
+            });
+        }
+
+        // 頁面載入完成後的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化課程顯示
+            updateLessonDisplay();
+            
+            // 初始化導覽標籤頁
+            initNavigationTabs();
+            
+            // 示範按鈕點擊效果
+            const demoButton = document.getElementById('demo-button');
+            if (demoButton) {
+                demoButton.addEventListener('click', function() {
+                    alert('您點擊了示範按鈕！這展示了如何為按鈕添加互動效果。');
+                });
+            }
+            
+            // 點擊外部關閉彈出視窗
+            document.addEventListener('click', function(e) {
+                // 檢查是否點擊了彈出視窗的背景
+                if (e.target.classList.contains('example-content') || 
+                    e.target.classList.contains('lesson-content')) {
+                    e.target.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+                
+                // 檢查是否點擊了行動選單背景
+                if (e.target.classList.contains('mobile-menu')) {
+                    toggleMobileMenu();
+                }
+            });
+            
+            // ESC 鍵關閉彈出視窗
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    // 關閉所有彈出視窗
+                    const modals = document.querySelectorAll('.example-content, .lesson-content, .mobile-menu');
+                    modals.forEach(modal => {
+                        if (modal.style.display === 'block') {
+                            modal.style.display = 'none';
+                        }
+                    });
+                    document.body.style.overflow = 'auto';
+                }
+            });
+            
+            // 自動保存用戶的 CSS 代碼到 localStorage
+            if (cssEditor) {
+                // 載入之前保存的代碼
+                const savedCSS = localStorage.getItem('css-learning-center-code');
+                if (savedCSS) {
+                    cssEditor.value = savedCSS;
+                    updatePreview();
+                }
+                
+                // 自動保存
+                cssEditor.addEventListener('input', function() {
+                    localStorage.setItem('css-learning-center-code', cssEditor.value);
+                });
+            }
+            
+            // 自動保存動畫代碼
+            const animationEditor = document.getElementById('animation-css');
+            if (animationEditor) {
+                const savedAnimation = localStorage.getItem('css-learning-center-animation');
+                if (savedAnimation) {
+                    animationEditor.value = savedAnimation;
+                    updateAnimationPreview();
+                }
+                
+                animationEditor.addEventListener('input', function() {
+                    localStorage.setItem('css-learning-center-animation', animationEditor.value);
+                });
+            }
+            
+            // 初始化動畫預覽
+            updateAnimationPreview();
+            
+            console.log('CSS 學習中心已成功載入！');
+        });
+        
+        // 錯誤處理
+        window.addEventListener('error', function(e) {
+            console.error('發生錯誤：', e.error);
+        });
+        
+        // 防止某些瀏覽器的兼容性問題
+        if (!Element.prototype.matches) {
+            Element.prototype.matches = Element.prototype.msMatchesSelector || 
+                                        Element.prototype.webkitMatchesSelector;
+        }
+        
+        if (!Element.prototype.closest) {
+            Element.prototype.closest = function(s) {
+                var el = this;
+                do {
+                    if (el.matches(s)) return el;
+                    el = el.parentElement || el.parentNode;
+                } while (el !== null && el.nodeType === 1);
+                return null;
+            };
+        }
+    </script>
+</body>
+</html>
